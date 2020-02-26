@@ -335,7 +335,17 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
                                                   ? @"audio"
                                                   : @"unknown")));
       CLLocation *const loc = asset.location;
-      NSString *const origFilename = resource.originalFilename;
+      NSString * origFilenameTemp = resource.originalFilename;
+      if (assetResources.count > 1) {
+        for (PHAssetResource * resourceTemp in assetResources)
+        {
+          if (resourceTemp.type != PHAssetResourceTypePhoto) {
+            continue;
+          }
+          origFilenameTemp = resourceTemp.originalFilename;
+        }
+      }
+      NSString *const origFilename = origFilenameTemp;
 
       // A note on isStored: in the previous code that used ALAssets, isStored
       // was always set to YES, probably because iCloud-synced images were never returned (?).
@@ -356,7 +366,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
               @"isStored": @YES, // this field doesn't seem to exist on android
               @"playableDuration": @([asset duration]) // fractional seconds
           },
-          @"timestamp": @(asset.creationDate.timeIntervalSince1970),
+          @"timestamp": @(asset.modificationDate.timeIntervalSince1970),
           @"location": (loc ? @{
               @"latitude": @(loc.coordinate.latitude),
               @"longitude": @(loc.coordinate.longitude),
