@@ -102,7 +102,7 @@ export type PhotoIdentifiersPage = {
 };
 export type SaveToCameraRollOptions = {
   type?: 'photo' | 'video' | 'auto',
-  album?: string,
+  album?: Array<string>,
 };
 
 export type GetAlbumsParams = {
@@ -149,7 +149,7 @@ class CameraRoll {
     tag: string,
     options: SaveToCameraRollOptions = {},
   ): Promise<string> {
-    let {type = 'auto', album = ''} = options;
+    let {type = 'auto', album = []} = options;
     invariant(
       typeof tag === 'string',
       'CameraRoll.saveToCameraRoll must be a valid string.',

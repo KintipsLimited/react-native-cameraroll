@@ -143,10 +143,23 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
         assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:inputURI];
       }
       placeholder = [assetRequest placeholderForCreatedAsset];
-      if (![options[@"album"] isEqualToString:@""]) {
-        photosAsset = [PHAsset fetchAssetsInAssetCollection:collection options:nil];
-        PHAssetCollectionChangeRequest *albumChangeRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:collection assets:photosAsset];
-        [albumChangeRequest addAssets:@[placeholder]];
+      if ([options[@"album"] count]) {
+        for (NSString *album in options[@"album"]) {
+          if (![album isEqualToString:@""]) {
+            PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+            fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", album ];
+            PHAssetCollection *album_collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
+                                                                  subtype:PHAssetCollectionSubtypeAny
+                                                                  options:fetchOptions].firstObject;
+
+            if (album_collection) {
+              photosAsset = [PHAsset fetchAssetsInAssetCollection:album_collection options:nil];
+              PHAssetCollectionChangeRequest *albumChangeRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:album_collection assets:photosAsset];
+              [albumChangeRequest addAssets:@[placeholder]];
+            }
+            
+          }
+        }
       }
     } completionHandler:^(BOOL success, NSError *error) {
       if (success) {
@@ -158,31 +171,33 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
     }];
   };
   void (^saveWithOptions)(void) = ^void() {
-    if (![options[@"album"] isEqualToString:@""]) {
-  
-      PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-      fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", options[@"album"] ];
-      collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
-                                                            subtype:PHAssetCollectionSubtypeAny
-                                                            options:fetchOptions].firstObject;
-      // Create the album
-      if (!collection) {
-        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-          PHAssetCollectionChangeRequest *createAlbum = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:options[@"album"]];
-          placeholder = [createAlbum placeholderForCreatedAssetCollection];
-        } completionHandler:^(BOOL success, NSError *error) {
-          if (success) {
-            PHFetchResult *collectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[placeholder.localIdentifier]
-                                                                                                        options:nil];
-            collection = collectionFetchResult.firstObject;
-            saveBlock();
-          } else {
-            reject(kErrorUnableToSave, nil, error);
+    if ([options[@"album"] count]) {
+
+      for (NSString *album in options[@"album"]) {
+        if (![album isEqualToString:@""]) {
+          PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+          fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", album ];
+          collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
+                                                                subtype:PHAssetCollectionSubtypeAny
+                                                                options:fetchOptions].firstObject;
+          // Create the album
+          if (!collection) {
+            [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+              PHAssetCollectionChangeRequest *createAlbum = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:album];
+              placeholder = [createAlbum placeholderForCreatedAssetCollection];
+            } completionHandler:^(BOOL success, NSError *error) {
+              if (success) {
+                PHFetchResult *collectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[placeholder.localIdentifier]
+                                                                                                            options:nil];
+                collection = collectionFetchResult.firstObject;
+              } else {
+                reject(kErrorUnableToSave, nil, error);
+              }
+            }];
           }
-        }];
-      } else {
-        saveBlock();
+        }
       }
+      saveBlock();
     } else {
       saveBlock();
     }
