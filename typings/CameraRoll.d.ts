@@ -74,6 +74,8 @@ declare namespace CameraRoll {
   type SaveToCameraRollOptions = {
     type?: 'photo' | 'video' | 'auto',
     album?: Array<string>,
+    albumOnly?: boolean,
+    photoPath: string,
   };
 
     /**

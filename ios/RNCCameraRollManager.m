@@ -137,12 +137,32 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
 
     [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
       PHAssetChangeRequest *assetRequest ;
-      if ([options[@"type"] isEqualToString:@"video"]) {
-        assetRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:inputURI];
+      PHFetchResult* fetchResult;
+
+      if ([options[@"albumOnly"] boolValue]) {
+        if (![options[@"photoPath"] isEqualToString:@""]) {
+          @try {
+            fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[options[@"photoPath"]] options:nil];
+            if([fetchResult count] > 0)
+            {
+              PHAsset *asset = [fetchResult objectAtIndex:0];
+            }
+          }
+          @catch ( NSException *e ) {
+            RCTLogInfo( @"NSException caught" );
+            RCTLogInfo( @"Name: %@", e.name);
+            RCTLogInfo( @"Reason: %@", e.reason );
+          }
+        }
       } else {
-        assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:inputURI];
+        if ([options[@"type"] isEqualToString:@"video"]) {
+          assetRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:inputURI];
+        } else {
+          assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:inputURI];
+        }
+        placeholder = [assetRequest placeholderForCreatedAsset];
       }
-      placeholder = [assetRequest placeholderForCreatedAsset];
+
       if ([options[@"album"] count]) {
         for (NSString *album in options[@"album"]) {
           if (![album isEqualToString:@""]) {
@@ -155,7 +175,17 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
             if (album_collection) {
               photosAsset = [PHAsset fetchAssetsInAssetCollection:album_collection options:nil];
               PHAssetCollectionChangeRequest *albumChangeRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:album_collection assets:photosAsset];
-              [albumChangeRequest addAssets:@[placeholder]];
+              
+              if ([options[@"albumOnly"] boolValue]) {
+                if (![options[@"photoPath"] isEqualToString:@""]) {
+                  if([fetchResult count] > 0) {
+                    [albumChangeRequest addAssets:fetchResult];
+                  }
+                }
+              } else {
+                [albumChangeRequest addAssets:@[placeholder]];
+              }
+              
             }
             
           }
@@ -163,7 +193,12 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
       }
     } completionHandler:^(BOOL success, NSError *error) {
       if (success) {
-        NSString *uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
+        NSString *uri;
+        if ([options[@"albumOnly"] boolValue]) {
+          uri = options[@"photoPath"];
+        } else {
+          uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
+        } 
         resolve(uri);
       } else {
         reject(kErrorUnableToSave, nil, error);
