@@ -128,59 +128,126 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
   __block PHFetchResult *photosAsset;
   __block PHAssetCollection *collection;
   __block PHObjectPlaceholder *placeholder;
+  __block NSInteger saveBlockCall;
+  __block NSInteger albumCount;
+  __block NSInteger curAlbumCount;
 
   void (^saveBlock)(void) = ^void() {
     // performChanges and the completionHandler are called on
     // arbitrary threads, not the main thread - this is safe
     // for now since all JS is queued and executed on a single thread.
     // We should reevaluate this if that assumption changes.
+    if (++saveBlockCall == 1) {
+        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+        PHAssetChangeRequest *assetRequest ;
+        PHFetchResult* fetchResult;
 
-    [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-      PHAssetChangeRequest *assetRequest ;
-      if ([options[@"type"] isEqualToString:@"video"]) {
-        assetRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:inputURI];
-      } else {
-        assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:inputURI];
-      }
-      placeholder = [assetRequest placeholderForCreatedAsset];
-      if (![options[@"album"] isEqualToString:@""]) {
-        photosAsset = [PHAsset fetchAssetsInAssetCollection:collection options:nil];
-        PHAssetCollectionChangeRequest *albumChangeRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:collection assets:photosAsset];
-        [albumChangeRequest addAssets:@[placeholder]];
-      }
-    } completionHandler:^(BOOL success, NSError *error) {
-      if (success) {
-        NSString *uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
-        resolve(uri);
-      } else {
-        reject(kErrorUnableToSave, nil, error);
-      }
-    }];
+        if ([options[@"albumOnly"] boolValue]) {
+          if (![options[@"photoPath"] isEqualToString:@""]) {
+            @try {
+              fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[options[@"photoPath"]] options:nil];
+            }
+            @catch ( NSException *e ) {
+              RCTLogInfo( @"NSException caught" );
+              RCTLogInfo( @"Name: %@", e.name);
+              RCTLogInfo( @"Reason: %@", e.reason );
+            }
+          }
+        } else {
+          if ([options[@"type"] isEqualToString:@"video"]) {
+            assetRequest = [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:inputURI];
+          } else {
+            assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImageAtFileURL:inputURI];
+          }
+          placeholder = [assetRequest placeholderForCreatedAsset];
+        }
+
+        if ([options[@"album"] count]) {
+          for (NSString *album in options[@"album"]) {
+            if (![album isEqualToString:@""]) {
+              PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+              fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", album ];
+              PHAssetCollection *album_collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
+                                                                    subtype:PHAssetCollectionSubtypeAny
+                                                                    options:fetchOptions].firstObject;
+
+              if (album_collection) {
+                photosAsset = [PHAsset fetchAssetsInAssetCollection:album_collection options:nil];
+                PHAssetCollectionChangeRequest *albumChangeRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:album_collection assets:photosAsset];
+                
+                if ([options[@"albumOnly"] boolValue]) {
+                  if (![options[@"photoPath"] isEqualToString:@""]) {
+                    if([fetchResult count] > 0) {
+                      [albumChangeRequest addAssets:fetchResult];
+                    }
+                  }
+                } else {
+                  [albumChangeRequest addAssets:@[placeholder]];
+                }
+                
+              }
+              
+            }
+          }
+        }
+      } completionHandler:^(BOOL success, NSError *error) {
+        if (success) {
+          NSString *uri;
+          if ([options[@"albumOnly"] boolValue]) {
+            uri = options[@"photoPath"];
+          } else {
+            uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
+          } 
+          resolve(uri);
+        } else {
+          reject(kErrorUnableToSave, nil, error);
+        }
+      }];
+    }
   };
   void (^saveWithOptions)(void) = ^void() {
-    if (![options[@"album"] isEqualToString:@""]) {
-  
-      PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-      fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", options[@"album"] ];
-      collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
-                                                            subtype:PHAssetCollectionSubtypeAny
-                                                            options:fetchOptions].firstObject;
-      // Create the album
-      if (!collection) {
-        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-          PHAssetCollectionChangeRequest *createAlbum = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:options[@"album"]];
-          placeholder = [createAlbum placeholderForCreatedAssetCollection];
-        } completionHandler:^(BOOL success, NSError *error) {
-          if (success) {
-            PHFetchResult *collectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[placeholder.localIdentifier]
-                                                                                                        options:nil];
-            collection = collectionFetchResult.firstObject;
-            saveBlock();
+    saveBlockCall = 0;
+    if ([options[@"album"] count]) {
+      albumCount = 0;
+      curAlbumCount = 0;
+      for (NSString *album in options[@"album"]) {
+        if (![album isEqualToString:@""]) {
+          albumCount++;
+        }
+      }
+
+      for (NSString *album in options[@"album"]) {
+        if (![album isEqualToString:@""]) {
+          PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+          fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", album ];
+          collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
+                                                                subtype:PHAssetCollectionSubtypeAny
+                                                                options:fetchOptions].firstObject;
+          // Create the album
+          if (!collection) {
+            [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+              PHAssetCollectionChangeRequest *createAlbum = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:album];
+              placeholder = [createAlbum placeholderForCreatedAssetCollection];
+            } completionHandler:^(BOOL success, NSError *error) {
+              if (success) {
+                PHFetchResult *collectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithLocalIdentifiers:@[placeholder.localIdentifier]
+                                                                                                            options:nil];
+                collection = collectionFetchResult.firstObject;
+
+                curAlbumCount++;
+                if (curAlbumCount == albumCount) {
+                  saveBlock();
+                }
+              } else {
+                reject(kErrorUnableToSave, nil, error);
+              }
+            }];
           } else {
-            reject(kErrorUnableToSave, nil, error);
+            curAlbumCount++;
           }
-        }];
-      } else {
+        }
+      }
+      if (curAlbumCount == albumCount) {
         saveBlock();
       }
     } else {
