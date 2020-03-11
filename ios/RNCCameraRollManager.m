@@ -293,28 +293,28 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
       }
 
       // Get underlying resources of an asset - this includes files as well as details about edited PHAssets
-      NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
-      if (![assetResources firstObject]) {
-        return;
-      }
-      PHAssetResource *const _Nonnull resource = [assetResources firstObject];
+      // NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
+      // if (![assetResources firstObject]) {
+      //   return;
+      // }
+      // PHAssetResource *const _Nonnull resource = [assetResources firstObject];
 
-      if ([mimeTypes count] > 0) {
-        CFStringRef const uti = (__bridge CFStringRef _Nonnull)(resource.uniformTypeIdentifier);
-        NSString *const mimeType = (NSString *)CFBridgingRelease(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
+      // if ([mimeTypes count] > 0) {
+      //   CFStringRef const uti = (__bridge CFStringRef _Nonnull)(resource.uniformTypeIdentifier);
+      //   NSString *const mimeType = (NSString *)CFBridgingRelease(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
 
-        BOOL __block mimeTypeFound = NO;
-        [mimeTypes enumerateObjectsUsingBlock:^(NSString * _Nonnull mimeTypeFilter, NSUInteger idx, BOOL * _Nonnull stop) {
-          if ([mimeType isEqualToString:mimeTypeFilter]) {
-            mimeTypeFound = YES;
-            *stop = YES;
-          }
-        }];
+      //   BOOL __block mimeTypeFound = NO;
+      //   [mimeTypes enumerateObjectsUsingBlock:^(NSString * _Nonnull mimeTypeFilter, NSUInteger idx, BOOL * _Nonnull stop) {
+      //     if ([mimeType isEqualToString:mimeTypeFilter]) {
+      //       mimeTypeFound = YES;
+      //       *stop = YES;
+      //     }
+      //   }];
 
-        if (!mimeTypeFound) {
-          return;
-        }
-      }
+      //   if (!mimeTypeFound) {
+      //     return;
+      //   }
+      // }
 
       // If we've accumulated enough results to resolve a single promise
       if (first == assets.count) {
@@ -335,17 +335,18 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
                                                   ? @"audio"
                                                   : @"unknown")));
       CLLocation *const loc = asset.location;
-      NSString * origFilenameTemp = resource.originalFilename;
-      if (assetResources.count > 1) {
-        for (PHAssetResource * resourceTemp in assetResources)
-        {
-          if (resourceTemp.type != PHAssetResourceTypePhoto) {
-            continue;
-          }
-          origFilenameTemp = resourceTemp.originalFilename;
-        }
-      }
-      NSString *const origFilename = origFilenameTemp;
+      // NSString * origFilenameTemp = resource.originalFilename;
+      // if (assetResources.count > 1) {
+      //   for (PHAssetResource * resourceTemp in assetResources)
+      //   {
+      //     if (resourceTemp.type != PHAssetResourceTypePhoto) {
+      //       continue;
+      //     }
+      //     origFilenameTemp = resourceTemp.originalFilename;
+      //   }
+      // }
+      // NSString *const origFilename = origFilenameTemp;
+      NSString * origFilename = [asset valueForKey:@"filename"];	
 
       // A note on isStored: in the previous code that used ALAssets, isStored
       // was always set to YES, probably because iCloud-synced images were never returned (?).
