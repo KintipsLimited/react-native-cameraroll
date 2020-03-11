@@ -308,6 +308,53 @@ static void RCTResolvePromise(RCTPromiseResolveBlock resolve,
   });
 }
 
+RCT_EXPORT_METHOD(getTotalCount:(NSDictionary *)params
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+  checkPhotoLibraryConfig();
+
+  NSString *const groupName = [RCTConvert NSString:params[@"groupName"]];
+  NSString *const groupTypes = [[RCTConvert NSString:params[@"groupTypes"]] lowercaseString];
+  NSString *const mediaType = [RCTConvert NSString:params[@"assetType"]];
+  NSUInteger const fromTime = [RCTConvert NSInteger:params[@"fromTime"]];
+  NSUInteger const toTime = [RCTConvert NSInteger:params[@"toTime"]];
+  
+  // If groupTypes is "all", we want to fetch the SmartAlbum "all photos". Otherwise, all
+  // other groupTypes values require the "album" collection type.
+  PHAssetCollectionType const collectionType = ([groupTypes isEqualToString:@"all"]
+                                                ? PHAssetCollectionTypeSmartAlbum
+                                                : PHAssetCollectionTypeAlbum);
+  PHAssetCollectionSubtype const collectionSubtype = [RCTConvert PHAssetCollectionSubtype:groupTypes];
+  
+  // Predicate for fetching assets within a collection
+  PHFetchOptions *const assetFetchOptions = [RCTConvert PHFetchOptionsFromMediaType:mediaType fromTime:fromTime toTime:toTime];
+  
+  PHFetchOptions *const collectionFetchOptions = [PHFetchOptions new];
+    collectionFetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"endDate" ascending:NO]];
+    if (groupName != nil) {
+      collectionFetchOptions.predicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"localizedTitle == '%@'", groupName]];
+    }
+  
+  requestPhotoLibraryAccess(reject, ^{
+    
+    if ([groupTypes isEqualToString:@"all"]) {
+      PHFetchResult <PHAsset *> *const assetFetchResult = [PHAsset fetchAssetsWithOptions: assetFetchOptions];
+        NSUInteger totalFiles = [assetFetchResult count];
+        resolve([NSNumber numberWithUnsignedInteger:totalFiles]);
+    } else {
+      PHFetchResult<PHAssetCollection *> *const assetCollectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithType:collectionType subtype:collectionSubtype options:collectionFetchOptions];
+      [assetCollectionFetchResult enumerateObjectsUsingBlock:^(PHAssetCollection * _Nonnull assetCollection, NSUInteger collectionIdx, BOOL * _Nonnull stopCollections) {
+        PHFetchResult<PHAsset *> *const assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:assetFetchOptions];
+        *stopCollections = YES;
+        NSUInteger totalFiles = [assetsFetchResult count];
+        resolve([NSNumber numberWithUnsignedInteger:totalFiles]);
+      }];
+    }
+
+  });
+}
+
 RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)

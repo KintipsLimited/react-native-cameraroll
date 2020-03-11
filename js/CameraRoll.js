@@ -216,6 +216,32 @@ class CameraRoll {
     }
     return RNCCameraRoll.getPhotos(params);
   }
+
+  /**
+   * Returns a Promise with total no.of photos
+   *
+   * See https://facebook.github.io/react-native/docs/cameraroll.html#getphotos
+   */
+  static getTotalCount(params: GetPhotosParams): Promise<PhotoIdentifiersPage> {
+    if (Platform.OS == "android") {
+      return 0;
+    }
+    if (!params.assetType) {
+      params.assetType = ASSET_TYPE_OPTIONS.All;
+    }
+    if (!params.groupTypes && Platform.OS !== 'android') {
+      params.groupTypes = GROUP_TYPES_OPTIONS.All;
+    }
+    if (arguments.length > 1) {
+      console.warn(
+        'CameraRoll.getTotalCount(tag, success, error) is deprecated.  Use the returned Promise instead',
+      );
+      let successCallback = arguments[1];
+      const errorCallback = arguments[2] || (() => {});
+      RNCCameraRoll.getTotalCount(params).then(successCallback, errorCallback);
+    }
+    return RNCCameraRoll.getTotalCount(params);
+  }
 }
 
 module.exports = CameraRoll;
