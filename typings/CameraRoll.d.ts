@@ -20,7 +20,7 @@ declare namespace CameraRoll {
   type AssetType = 'All' | 'Videos' | 'Photos';
 
   interface GetPhotosParams {
-    first: number;
+    first?: number;
     after?: string;
     groupTypes?: GroupType;
     groupName?: string;
