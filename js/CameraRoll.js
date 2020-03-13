@@ -224,7 +224,15 @@ class CameraRoll {
    */
   static getTotalCount(params: GetPhotosParams): Promise<PhotoIdentifiersPage> {
     if (Platform.OS == "android") {
-      return 0;
+      if (params.assetType = ASSET_TYPE_OPTIONS.All) {
+        return RNCCameraRoll.getMediaCount("PHOTO") + RNCCameraRoll.getMediaCount("VIDEO")
+      }
+      else if (params.assetType = ASSET_TYPE_OPTIONS.Photos) {
+        return RNCCameraRoll.getMediaCount("PHOTO") 
+      }
+      else if (params.assetType = ASSET_TYPE_OPTIONS.Videos) {
+        return RNCCameraRoll.getMediaCount("VIDEO") 
+      }
     }
     if (!params.assetType) {
       params.assetType = ASSET_TYPE_OPTIONS.All;
