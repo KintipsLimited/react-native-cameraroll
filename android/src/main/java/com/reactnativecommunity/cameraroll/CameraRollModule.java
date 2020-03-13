@@ -79,6 +79,8 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
   private static final String MEDIA_PHOTO = "PHOTO";
   private static final String MEDIA_VIDEO = "VIDEO";
 
+  private final ReactApplicationContext reactContext;
+
   private static final String[] PROJECTION = {
     Images.Media._ID,
     Images.Media.MIME_TYPE,
@@ -96,6 +98,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
 
   public CameraRollModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    this.reactContext = reactContext;
   }
 
   @Override
