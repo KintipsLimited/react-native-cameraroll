@@ -22,6 +22,13 @@ import android.provider.MediaStore;
 import android.provider.MediaStore.Images;
 import android.text.TextUtils;
 
+
+import android.app.Activity;
+import android.content.Intent;
+import java.io.*;
+
+import java.util.*;
+
 import com.facebook.common.logging.FLog;
 import com.facebook.react.bridge.GuardedAsyncTask;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -68,6 +75,9 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
   private static final String ASSET_TYPE_PHOTOS = "Photos";
   private static final String ASSET_TYPE_VIDEOS = "Videos";
   private static final String ASSET_TYPE_ALL = "All";
+
+  private static final String MEDIA_PHOTO = "PHOTO";
+  private static final String MEDIA_VIDEO = "VIDEO";
 
   private static final String[] PROJECTION = {
     Images.Media._ID,
@@ -662,5 +672,54 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
             "Could not delete all media, only deleted " + deletedCount + " photos.");
       }
     }
+  }
+
+
+
+  @Override
+  public Map<String, Object> getConstants() {
+      final Map<String, Object> constants = new HashMap<>();
+      constants.put(MEDIA_PHOTO, MEDIA_PHOTO);
+      constants.put(MEDIA_VIDEO, MEDIA_VIDEO);
+      return constants;
+  }
+
+
+  @ReactMethod
+  public void getMediaCount(String mediaType, Promise promise) {
+      if (mediaType.equals(MEDIA_PHOTO)) {
+          promise.resolve(getAllPicturesCount());
+      } else if (mediaType.equals(MEDIA_VIDEO)){
+          promise.resolve(getAllVideosCount());
+      }
+      promise.resolve(0);
+  }
+
+  private int getAllPicturesCount(){
+      int count = 0;
+      final String[] columns = { MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID };
+      final String orderBy = MediaStore.Images.Media._ID;
+      
+      Cursor cursor = reactContext.getContentResolver().query(
+              MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null,
+              null, orderBy);
+      
+      if (cursor != null){
+          count = cursor.getCount();
+      }
+      cursor.close();
+      return count;
+  }
+
+  public int getAllVideosCount() {
+      int vidsCount = 0;
+      Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+      String[] projection = { MediaStore.Video.VideoColumns.DATA };
+      Cursor cursor = reactContext.getContentResolver().query(uri, projection, null, null, null);
+      if (cursor != null) {
+          vidsCount = cursor.getCount();
+          cursor.close();
+      }
+      return vidsCount;
   }
 }
