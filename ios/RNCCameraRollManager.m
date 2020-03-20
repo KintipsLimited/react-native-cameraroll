@@ -197,6 +197,20 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
             uri = options[@"photoPath"];
           } else {
             uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
+            /// get the filename
+            @try {
+              PHFetchResult* fetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[[placeholder localIdentifier]] options:nil];
+
+              if([fetchRes count] > 0) {
+                NSString*FileName=[[fetchRes firstObject] valueForKey:@"filename"];
+                uri = [NSString stringWithFormat:@"%@/%@", uri, FileName];
+              }
+            }
+            @catch ( NSException *e ) {
+              RCTLogInfo( @"NSException caught" );
+              RCTLogInfo( @"Name: %@", e.name);
+              RCTLogInfo( @"Reason: %@", e.reason );
+            }
           } 
           resolve(uri);
         } else {
