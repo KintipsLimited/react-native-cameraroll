@@ -421,11 +421,11 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
       }
 
       // Get underlying resources of an asset - this includes files as well as details about edited PHAssets
-      // NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
-      // if (![assetResources firstObject]) {
-      //   return;
-      // }
-      // PHAssetResource *const _Nonnull resource = [assetResources firstObject];
+      NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
+      if (![assetResources firstObject]) {
+        return;
+      }
+      PHAssetResource *const _Nonnull resource = [assetResources firstObject];
 
       // if ([mimeTypes count] > 0) {
       //   CFStringRef const uti = (__bridge CFStringRef _Nonnull)(resource.uniformTypeIdentifier);
@@ -474,7 +474,8 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
       //   }
       // }
       // NSString *const origFilename = origFilenameTemp;
-      NSString * origFilename = [asset valueForKey:@"filename"];	
+      NSString * origFilename = [asset valueForKey:@"filename"];
+
 
       // A note on isStored: in the previous code that used ALAssets, isStored
       // was always set to YES, probably because iCloud-synced images were never returned (?).
@@ -490,6 +491,8 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
           @"image": @{
               @"uri": uri,
               @"filename": origFilename,
+              @"fileSize": [resource valueForKey:@"fileSize"],
+              @"asses": asset,
               @"height": @([asset pixelHeight]),
               @"width": @([asset pixelWidth]),
               @"isStored": @YES, // this field doesn't seem to exist on android
