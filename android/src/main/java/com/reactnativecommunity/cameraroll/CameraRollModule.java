@@ -461,7 +461,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
 
   private static void putEdges(
       ContentResolver resolver,
-      com.sun.glass.ui.Cursor media,
+      Cursor media,
       WritableMap response,
       int limit) {
     WritableArray edges = new WritableNativeArray();
