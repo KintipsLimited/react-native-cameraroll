@@ -88,7 +88,6 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     Images.Media.DATE_TAKEN,
     MediaStore.MediaColumns.WIDTH,
     MediaStore.MediaColumns.HEIGHT,
-    MediaStore.MediaColumns.SIZE,
     Images.Media.LONGITUDE,
     Images.Media.LATITUDE,
     MediaStore.MediaColumns.DATA
@@ -474,13 +473,12 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int longitudeIndex = media.getColumnIndex(Images.Media.LONGITUDE);
     int latitudeIndex = media.getColumnIndex(Images.Media.LATITUDE);
     int dataIndex = media.getColumnIndex(MediaStore.MediaColumns.DATA);
-    int sizeIndex = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
 
     for (int i = 0; i < limit && !media.isAfterLast(); i++) {
       WritableMap edge = new WritableNativeMap();
       WritableMap node = new WritableNativeMap();
       boolean imageInfoSuccess =
-          putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, sizeIndex, dataIndex, mimeTypeIndex);
+          putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex);
       if (imageInfoSuccess) {
         putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateTakenIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
@@ -515,7 +513,6 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int idIndex,
       int widthIndex,
       int heightIndex,
-      int sizeIndex,
       int dataIndex,
       int mimeTypeIndex) {
     WritableMap image = new WritableNativeMap();
@@ -524,9 +521,8 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     String strFileName = file.getName();
     image.putString("uri", photoUri.toString());
     image.putString("filename", strFileName);
-    image.putDouble("filesize", (media.getDouble(sizeIndex)));
     float width = media.getInt(widthIndex);
-    float height = media.getInt(heightIndex); 
+    float height = media.getInt(heightIndex);
 
     String mimeType = media.getString(mimeTypeIndex);
 
@@ -536,6 +532,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
         AssetFileDescriptor photoDescriptor = resolver.openAssetFileDescriptor(photoUri, "r");
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(photoDescriptor.getFileDescriptor());
+
         try {
           if (width <= 0 || height <= 0) {
             width =
