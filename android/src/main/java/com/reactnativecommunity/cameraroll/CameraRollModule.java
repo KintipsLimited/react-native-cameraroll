@@ -86,6 +86,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     Images.Media.MIME_TYPE,
     Images.Media.BUCKET_DISPLAY_NAME,
     Images.Media.DATE_TAKEN,
+    Images.Media.DATE_MODIFIED,
     MediaStore.MediaColumns.WIDTH,
     MediaStore.MediaColumns.HEIGHT,
     Images.Media.LONGITUDE,
@@ -468,6 +469,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int mimeTypeIndex = media.getColumnIndex(Images.Media.MIME_TYPE);
     int groupNameIndex = media.getColumnIndex(Images.Media.BUCKET_DISPLAY_NAME);
     int dateTakenIndex = media.getColumnIndex(Images.Media.DATE_TAKEN);
+    int dateModifiedIndex = media.getColumnIndex(Images.Media.DATE_MODIFIED);
     int widthIndex = media.getColumnIndex(MediaStore.MediaColumns.WIDTH);
     int heightIndex = media.getColumnIndex(MediaStore.MediaColumns.HEIGHT);
     int longitudeIndex = media.getColumnIndex(Images.Media.LONGITUDE);
@@ -480,7 +482,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       boolean imageInfoSuccess =
           putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex);
       if (imageInfoSuccess) {
-        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateTakenIndex);
+        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
 
         edge.putMap("node", node);
@@ -500,10 +502,12 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       WritableMap node,
       int mimeTypeIndex,
       int groupNameIndex,
-      int dateTakenIndex) {
+      //int dateTakenIndex) {
+      int dateModifiedIndex) {
     node.putString("type", media.getString(mimeTypeIndex));
     node.putString("group_name", media.getString(groupNameIndex));
-    node.putDouble("timestamp", media.getLong(dateTakenIndex) / 1000d);
+    //node.putDouble("timestamp", media.getLong(dateTakenIndex) / 1000d);
+    node.putDouble("timestamp", media.getLong(dateModifiedIndex));
   }
 
   private static boolean putImageInfo(
