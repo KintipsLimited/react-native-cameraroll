@@ -178,7 +178,7 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
                 if ([options[@"albumOnly"] boolValue]) {
                   if (![options[@"photoPath"] isEqualToString:@""]) {
                     if([fetchResult count] > 0) {
-                      [albumChangeRequest addAssets:fetchResult];
+                        [albumChangeRequest addAssets:fetchResult];
                     }
                   }
                 } else {
@@ -192,27 +192,53 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
         }
       } completionHandler:^(BOOL success, NSError *error) {
         if (success) {
-          NSString *uri;
-          if ([options[@"albumOnly"] boolValue]) {
-            uri = options[@"photoPath"];
-          } else {
-            uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
-            /// get the filename
-            @try {
-              PHFetchResult* fetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[[placeholder localIdentifier]] options:nil];
-
-              if([fetchRes count] > 0) {
-                NSString*FileName=[[fetchRes firstObject] valueForKey:@"filename"];
-                uri = [NSString stringWithFormat:@"%@/%@", uri, FileName];
+          @try {
+              NSString *result;
+              
+              if ([options[@"albumOnly"] boolValue]) {
+                  PHFetchResult* fetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[options[@"photoPath"]] options:nil];
+                  NSString * filename = @"";
+                  NSTimeInterval modifiedDate;
+                  NSString * uri = @"";
+                  // get the filename
+                  if ([fetchRes count] > 0) {
+                      PHAsset * asset = [fetchRes firstObject];
+                      filename = [asset valueForKey:@"filename"];
+                      uri = [NSString stringWithFormat:@"ph://%@", [asset localIdentifier]];
+                      modifiedDate = [[asset modificationDate] timeIntervalSince1970];
+                      result = [NSString stringWithFormat:@"{\"uri\": \"%@\", \"filename\": \"%@\", \"lastModifiedDate\": %f}", uri, filename, modifiedDate];
+                  } else {
+                      NSError *error = [NSError errorWithDomain:@"com.kintips.authenticator" code:10000 userInfo:@{@"Error reason": [NSString stringWithFormat:@"Cannot add photo \"%@\" to album", options[@"photoPath"]]}];
+                      reject(kErrorUnableToSave, nil, error);
+                      return;
+                  }
+                  
+              } else {
+                  PHFetchResult* fetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[[placeholder localIdentifier]] options:nil];
+                  NSString * uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
+                  NSString * filename = @"";
+                  NSTimeInterval modifiedDate;
+                  // get the filename
+                  if ([fetchRes count] > 0) {
+                      PHAsset * asset = [fetchRes firstObject];
+                      filename = [asset valueForKey:@"filename"];
+                      modifiedDate = [[asset modificationDate] timeIntervalSince1970];
+                  } else {
+                      NSError *error = [NSError errorWithDomain:@"com.kintips.authenticator" code:10000 userInfo:@{@"Error reason": [NSString stringWithFormat:@"Cannot add photo \"%@\" to album", options[@"photoPath"]]}];
+                      reject(kErrorUnableToSave, nil, error);
+                      return;
+                  }
+                  
+                  result = [NSString stringWithFormat:@"{\"uri\": \"%@\", \"filename\": \"%@\", \"lastModifiedDate\": %f}", uri, filename, modifiedDate];
               }
-            }
-            @catch ( NSException *e ) {
+              resolve(result);
+          }
+          @catch ( NSException *e ) {
               RCTLogInfo( @"NSException caught" );
               RCTLogInfo( @"Name: %@", e.name);
               RCTLogInfo( @"Reason: %@", e.reason );
-            }
-          } 
-          resolve(uri);
+              reject(kErrorUnableToSave, nil, error);
+          }
         } else {
           reject(kErrorUnableToSave, nil, error);
         }
