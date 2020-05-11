@@ -113,6 +113,7 @@ export type GetAlbumsParams = {
 
 export type Album = {
   title: string,
+  id: String,
   count: number,
 }
 /**
