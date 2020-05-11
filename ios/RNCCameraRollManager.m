@@ -404,7 +404,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
 
   NSUInteger const first = [RCTConvert NSInteger:params[@"first"]];
   NSString *const afterCursor = [RCTConvert NSString:params[@"after"]];
-  NSString *const groupName = [RCTConvert NSString:params[@"groupName"]];
+  NSString *const groupId = [RCTConvert NSString:params[@"groupId"]];
   NSString *const groupTypes = [[RCTConvert NSString:params[@"groupTypes"]] lowercaseString];
   NSString *const mediaType = [RCTConvert NSString:params[@"assetType"]];
   NSUInteger const fromTime = [RCTConvert NSInteger:params[@"fromTime"]];
@@ -430,8 +430,8 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
   // Filter collection name ("group")
   PHFetchOptions *const collectionFetchOptions = [PHFetchOptions new];
   collectionFetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"endDate" ascending:NO]];
-  if (groupName != nil) {
-    collectionFetchOptions.predicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"localizedTitle == '%@'", groupName]];
+  if (groupId != nil) {
+    collectionFetchOptions.predicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"localIdentifier == '%@'", groupId]];
   }
   
   BOOL __block stopCollections_;

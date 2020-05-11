@@ -56,7 +56,7 @@ export type GetPhotosParams = {
    * Specifies filter on group names, like 'Recent Photos' or custom album
    * titles.
    */
-  groupName?: string,
+  groupId?: string,
 
   /**
    * Specifies filter on asset type

@@ -21,9 +21,9 @@ declare namespace CameraRoll {
 
   interface GetPhotosParams {
     first?: number;
-    after?: string;
+    after?: string; 
     groupTypes?: GroupType;
-    groupName?: string;
+    groupId?: string;
     assetType?: AssetType;
     mimeTypes?: Array<string>;
     fromTime?: number;
