@@ -318,6 +318,7 @@ RCT_EXPORT_METHOD(getAlbums:(NSDictionary *)params
     if (assetsFetchResult.count > 0) {
       [result addObject:@{
         @"title": [obj localizedTitle],
+        @"id": [obj localIdentifier],
         @"count": @(assetsFetchResult.count)
       }];
     }

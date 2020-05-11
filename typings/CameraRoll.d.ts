@@ -68,6 +68,7 @@ declare namespace CameraRoll {
 
   interface Album {
     title: string;
+    id: string;
     count: number;
   }
 
