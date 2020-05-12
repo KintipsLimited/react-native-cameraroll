@@ -114,6 +114,40 @@ static void requestPhotoLibraryAccess(RCTPromiseRejectBlock reject, PhotosAuthor
   }
 }
 
+RCT_EXPORT_METHOD(checkAlbumExists:(NSString *) albumId
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+    fetchOptions.predicate = [NSPredicate predicateWithFormat:@"localIdentifier = %@", albumId ];
+    PHAssetCollection * collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
+                                                          subtype:PHAssetCollectionSubtypeAny
+                                                          options:fetchOptions].firstObject;
+    if (collection) {
+        resolve([NSNumber numberWithBool:YES]);
+    } else {
+        resolve([NSNumber numberWithBool:NO]);
+    }
+}
+
+RCT_EXPORT_METHOD(saveAlbum:(NSString *) albumName
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+     __block PHObjectPlaceholder *placeholder;
+    [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+      PHAssetCollectionChangeRequest *createAlbum = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:albumName];
+      placeholder = [createAlbum placeholderForCreatedAssetCollection];
+    } completionHandler:^(BOOL success, NSError *error) {
+      if (success) {
+        resolve(placeholder.localIdentifier);
+      } else {
+        reject(kErrorUnableToSave, nil, error);
+      }
+    }];
+}
+                    
+
 RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
                   options:(NSDictionary *)options
                   resolve:(RCTPromiseResolveBlock)resolve
