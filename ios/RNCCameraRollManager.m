@@ -166,7 +166,7 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
           for (NSString *album in options[@"album"]) {
             if (![album isEqualToString:@""]) {
               PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-              fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", album ];
+              fetchOptions.predicate = [NSPredicate predicateWithFormat:@"localIdentifier = %@", album ];
               PHAssetCollection *album_collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
                                                                     subtype:PHAssetCollectionSubtypeAny
                                                                     options:fetchOptions].firstObject;
@@ -247,6 +247,9 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
   };
   void (^saveWithOptions)(void) = ^void() {
     saveBlockCall = 0;
+    saveBlock();
+    // leave the create album job to the method createAlbum
+    /*
     if ([options[@"album"] count]) {
       albumCount = 0;
       curAlbumCount = 0;
@@ -259,7 +262,7 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
       for (NSString *album in options[@"album"]) {
         if (![album isEqualToString:@""]) {
           PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-          fetchOptions.predicate = [NSPredicate predicateWithFormat:@"title = %@", album ];
+          fetchOptions.predicate = [NSPredicate predicateWithFormat:@"localIdentifier = %@", album ];
           collection = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
                                                                 subtype:PHAssetCollectionSubtypeAny
                                                                 options:fetchOptions].firstObject;
@@ -293,6 +296,7 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
     } else {
       saveBlock();
     }
+    */
   };
 
   void (^loadBlock)(void) = ^void() {
@@ -501,7 +505,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
       //   }
       // }
       // NSString *const origFilename = origFilenameTemp;
-      NSString * origFilename = [asset valueForKey:@"filename"];	
+      NSString * origFilename = [asset valueForKey:@"filename"];
 
       // A note on isStored: in the previous code that used ALAssets, isStored
       // was always set to YES, probably because iCloud-synced images were never returned (?).
