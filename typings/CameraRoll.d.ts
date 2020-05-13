@@ -109,9 +109,9 @@ declare namespace CameraRoll {
 
     function getTotalCount(params: GetPhotosParams): Promise<number>;
 
-    function checkAlbumExists(albumId: string): Promise<Boolean>;
+    function checkAlbumExists(albumId: string): Promise<boolean>;
     
-    function saveAlbum(albumName: string): Promise<String>;
+    function saveAlbum(albumName: string): Promise<string>;
 }
 
 export = CameraRoll;
