@@ -144,6 +144,13 @@ class CameraRoll {
     return RNCCameraRoll.deletePhotos(photoUris);
   }
 
+  static checkAlbumExists(albumId: string) {
+    return RNCCameraRoll.checkAlbumExists(albumId);
+  }
+
+  static saveAlbum(albumName: string) {
+    return RNCCameraRoll.saveAlbum(albumName);
+  }
   /**
    * Saves the photo or video to the camera roll or photo library.
    *
