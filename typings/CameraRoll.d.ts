@@ -79,6 +79,20 @@ declare namespace CameraRoll {
     photoPath: string,
   };
 
+  type GetThumbnailParams = {
+    format: "jpeg" | "png",
+    timestamp: number, /** for video only */
+    width: number,
+    height: number,
+    assetType: "PHOTO" | "VIDEO"
+  }
+  
+  type Thumbnail = {
+    url : string,
+    width: number,
+    height: number
+  }
+
     /**
      * `CameraRoll.saveImageWithTag()` is deprecated. Use `CameraRoll.saveToCameraRoll()` instead.
      */
@@ -112,6 +126,8 @@ declare namespace CameraRoll {
     function checkAlbumExists(albumId: string): Promise<boolean>;
     
     function saveAlbum(albumName: string): Promise<string>;
+
+    function getThumbnail(params: GetThumbnailParams): Promise<Thumbnail>;
 }
 
 export = CameraRoll;

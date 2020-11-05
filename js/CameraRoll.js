@@ -116,6 +116,20 @@ export type Album = {
   id: String,
   count: number,
 }
+
+export type GetThumbnailParams = {
+  format: "jpeg" | "png",
+  timestamp: number, /** for video only */
+  width: number,
+  height: number,
+  assetType: "PHOTO" | "VIDEO"
+}
+
+export type Thumbnail = {
+  url : string,
+  width: number,
+  height: number
+}
 /**
  * `CameraRoll` provides access to the local camera roll or photo library.
  *
@@ -258,6 +272,10 @@ class CameraRoll {
       RNCCameraRoll.getTotalCount(params).then(successCallback, errorCallback);
     }
     return RNCCameraRoll.getTotalCount(params);
+  }
+
+  static getThumbnail(params: GetThumbnailParams): Promise<Thumbnail> {
+    return RNCCameraRoll.getThumbnail(params);
   }
 }
 

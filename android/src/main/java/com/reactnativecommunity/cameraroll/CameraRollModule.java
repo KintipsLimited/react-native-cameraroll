@@ -741,4 +741,21 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       }
       return vidsCount;
   }
+
+  /**
+   * Method that will create a thumbnail for images and videos
+   * @param uri
+   * @param params
+   * @param promise
+   */
+  @ReactMethod
+  public void createThumbnail(String uri, ReadableMap params, Promise promise) {
+    int width = params.hasKey("width") ? params.getInt("width") : 0;
+    int height = params.hasKey("height") ? params.getInt("height") : 0;
+    String format = params.hasKey("format") ? params.getString("format") : null;
+    int timestamp = params.hasKey("timestamp") ? params.getInt("timestamp") : 0;
+    String assetType = params.hasKey("assetType") ? params.getString("assetType") : null;
+
+    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, promise);
+  }
 }
