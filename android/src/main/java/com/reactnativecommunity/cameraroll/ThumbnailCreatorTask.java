@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.util.Log;
 import android.webkit.URLUtil;
 
 import com.facebook.react.bridge.Arguments;
@@ -59,6 +60,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
     private void createThumbnail() {
         String thumbnailFolder = reactContext.getApplicationContext().getCacheDir().getAbsolutePath() + THUMBNAILS_FOLDER;
+        Log.d("RNCameraRoll", "Thumbnail folder: " + thumbnailFolder);
         try {
             File thumbnailDir = createDirIfNotExists(thumbnailFolder);
             if (assetType.equals(MEDIA_PHOTO)) {
@@ -132,13 +134,16 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             SampledBitmap decodedSample = decodeSampledBitmapFromFile(uri, width, height);
             Bitmap bitmap = decodedSample.bitmap;
             BitmapFactory.Options options = decodedSample.options;
+            Log.d("RNCameraRoll", "Bitmap created");
             String filename = generateThumbnailFilename(format, options);
             File imageFile = new File(thumbnailDir, filename);
             imageFile.createNewFile();
             fOut = new FileOutputStream(imageFile);
 
             // 100 means no compression, the lower you go the stronger the compression
+            Log.d("RNCameraRoll", "Compressing image");
             compressImage(bitmap, options, fOut, format);
+            Log.d("RNCameraRoll", "Image compressed");
 
             fOut.flush();
             fOut.close();
@@ -147,6 +152,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("url", "file://" + thumbnailFolder + "/" + filename);
             map.putDouble("width", bitmap.getWidth());
             map.putDouble("height", bitmap.getHeight());
+            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("url"));
 
             promise.resolve(map);
 

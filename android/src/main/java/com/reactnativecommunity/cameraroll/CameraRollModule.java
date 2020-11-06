@@ -25,6 +25,8 @@ import android.text.TextUtils;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
+
 import java.io.*;
 
 import java.util.*;
@@ -755,7 +757,8 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     String format = params.hasKey("format") ? params.getString("format") : null;
     int timestamp = params.hasKey("timestamp") ? params.getInt("timestamp") : 0;
     String assetType = params.hasKey("assetType") ? params.getString("assetType") : null;
+    Log.d("RNCameraRoll", "Creating thumbnail from " + uri + " with the following params: " + params.toString());
 
-    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, promise);
+    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, promise).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
   }
 }
