@@ -246,7 +246,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             }
             else if (width > height) {
                 newWidth = (width * requestedHeight) / height;
-                scale = newWidth / width;
+                scale = newHeight / height;
                 offsetX = (newWidth - newHeight) / 2;
             }
 
@@ -264,7 +264,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
             Log.d("RNCameraRoll", b.toString());
 
-            return Bitmap.createBitmap(image, offsetX, offsetY, newWidth, newHeight, matrix, false);
+            return Bitmap.createBitmap(image, 0, 0, newWidth, newHeight, matrix, false);
         }
         else {
             return image;
