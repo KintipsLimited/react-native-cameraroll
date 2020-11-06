@@ -15,6 +15,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,6 +33,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private static final String THUMBNAILS_FOLDER = "/thumbnails";
 
     private static final String ERROR_UNABLE_TO_GENERATE_THUMBNAIL = "E_UNABLE_TO_GENERATE_THUMBNAIL";
+    private static final String ERROR_UNABLE_TO_DECODE_FILE = "E_UNABLE_TO_DECODE_FILE";
 
     private final String uri;
     private final int width;
@@ -163,13 +165,19 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     }
 
     private SampledBitmap decodeSampledBitmapFromFile(String uri, int width, int height) {
+        String fileUri = uri;
+        if (URLUtil.isFileUrl(uri)) {
+            fileUri = Uri.decode(uri).replace("file://", "");
+        }
+
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        Bitmap photoForThumbnail = BitmapFactory.decodeFile(uri, options);
+        Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
 
         options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
+        Log.d("RNCameraRoll", "sample size: " + options.inSampleSize);
         options.inJustDecodeBounds = false;
-        return new SampledBitmap(BitmapFactory.decodeFile(uri, options), options);
+        return new SampledBitmap(BitmapFactory.decodeFile(fileUri, options), options);
     }
 
     private int calculateInSampleSize(final int bitmapWidth, final int bitmapHeight, int requestedWidth, int requestedHeight) {
@@ -240,6 +248,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         SampledBitmap(Bitmap bitmap, BitmapFactory.Options options) {
             this.bitmap = bitmap;
             this.options = options;
+            Log.d("RNCameraRoll", "Bitmap created with the following: " + bitmap.toString() + " options: " + options.toString());
         }
     }
 }
