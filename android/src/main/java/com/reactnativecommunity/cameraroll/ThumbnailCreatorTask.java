@@ -173,11 +173,11 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         }
 
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
+//        options.inJustDecodeBounds = true;
         Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
 
 //        options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
-        Log.d("RNCameraRoll", "sample size: " + options.inSampleSize);
+        Log.d("RNCameraRoll", " image: " + photoForThumbnail.toString());
 //        options.inJustDecodeBounds = false;
         return new SampledBitmap(scaleAndCropBitmap(photoForThumbnail, width, height), options);
     }
