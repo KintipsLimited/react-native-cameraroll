@@ -274,8 +274,8 @@ class CameraRoll {
     return RNCCameraRoll.getTotalCount(params);
   }
 
-  static getThumbnail(params: GetThumbnailParams): Promise<Thumbnail> {
-    return RNCCameraRoll.getThumbnail(params);
+  static getThumbnail(uri : string, params: GetThumbnailParams): Promise<Thumbnail> {
+    return RNCCameraRoll.getThumbnail(uri, params);
   }
 }
 

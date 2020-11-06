@@ -749,7 +749,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
    * @param promise
    */
   @ReactMethod
-  public void createThumbnail(String uri, ReadableMap params, Promise promise) {
+  public void getThumbnail(String uri, ReadableMap params, Promise promise) {
     int width = params.hasKey("width") ? params.getInt("width") : 0;
     int height = params.hasKey("height") ? params.getInt("height") : 0;
     String format = params.hasKey("format") ? params.getString("format") : null;
