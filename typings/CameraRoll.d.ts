@@ -127,7 +127,7 @@ declare namespace CameraRoll {
     
     function saveAlbum(albumName: string): Promise<string>;
 
-    function getThumbnail(params: GetThumbnailParams): Promise<Thumbnail>;
+    function getThumbnail(uri : string, params: GetThumbnailParams): Promise<Thumbnail>;
 }
 
 export = CameraRoll;
