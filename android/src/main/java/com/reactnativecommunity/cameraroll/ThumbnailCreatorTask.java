@@ -253,6 +253,17 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             Matrix matrix = new Matrix();
             matrix.postScale(scale, scale);
 
+            StringBuilder b = new StringBuilder();
+            b.append("scaleAndCropBitmap: \n");
+            b.append("image " + image);
+            b.append("\n");
+            b.append("offX " + offsetX);
+            b.append("offY " + offsetY);
+            b.append("nWidth " + newWidth);
+            b.append("nHeight " + newHeight);
+
+            Log.d("RNCameraRoll", b.toString());
+
             return Bitmap.createBitmap(image, offsetX, offsetY, newWidth, newHeight, matrix, false);
         }
         else {
