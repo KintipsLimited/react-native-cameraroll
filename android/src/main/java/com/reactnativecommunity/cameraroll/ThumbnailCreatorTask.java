@@ -83,7 +83,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         try {
             Bitmap image = getBitmapAtTime(uri, timestamp);
-//            BitmapFactory.Options options = new BitmapFactory.Options();
+            BitmapFactory.Options options = new BitmapFactory.Options();
 //            options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
 //            options.inJustDecodeBounds = false;
 //            Bitmap sampledImage = BitmapFactory.decodeFile(uri, options);
@@ -96,9 +96,9 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             fOut = new FileOutputStream(imageFile);
 
             if (PNG_EXT.equals(format)) {
-                sampledImage.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+                image.compress(Bitmap.CompressFormat.PNG, 100, fOut);
             } else {
-                sampledImage.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+                image.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
             }
 
             fOut.flush();
