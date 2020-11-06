@@ -2,6 +2,7 @@ package com.reactnativecommunity.cameraroll;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Log;
@@ -82,10 +83,11 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         try {
             Bitmap image = getBitmapAtTime(uri, timestamp);
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
-            options.inJustDecodeBounds = false;
-            Bitmap sampledImage = BitmapFactory.decodeFile(uri, options);
+//            BitmapFactory.Options options = new BitmapFactory.Options();
+//            options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
+//            options.inJustDecodeBounds = false;
+//            Bitmap sampledImage = BitmapFactory.decodeFile(uri, options);
+            Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
             String filename = generateThumbnailFilename(forVideoFormat, options);
 
@@ -174,25 +176,25 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         options.inJustDecodeBounds = true;
         Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
 
-        options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
+//        options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
         Log.d("RNCameraRoll", "sample size: " + options.inSampleSize);
-        options.inJustDecodeBounds = false;
-        return new SampledBitmap(BitmapFactory.decodeFile(fileUri, options), options);
+//        options.inJustDecodeBounds = false;
+        return new SampledBitmap(scaleAndCropBitmap(photoForThumbnail, width, height), options);
     }
 
-    private int calculateInSampleSize(final int bitmapWidth, final int bitmapHeight, int requestedWidth, int requestedHeight) {
-        int inSampleSize = 1;
-
-        if (bitmapWidth > requestedHeight || bitmapHeight > requestedWidth) {
-            final int halfHeight = bitmapHeight / 2;
-            final int halfWidth = bitmapWidth / 2;
-
-            while ((halfHeight / inSampleSize) >= requestedHeight && (halfWidth / inSampleSize) >= requestedWidth) {
-                inSampleSize *= 2;
-            }
-        }
-        return inSampleSize;
-    }
+//    private int calculateInSampleSize(final int bitmapWidth, final int bitmapHeight, int requestedWidth, int requestedHeight) {
+//        int inSampleSize = 1;
+//
+//        if (bitmapWidth > requestedHeight || bitmapHeight > requestedWidth) {
+//            final int halfHeight = bitmapHeight / 2;
+//            final int halfWidth = bitmapWidth / 2;
+//
+//            while ((halfHeight / inSampleSize) >= requestedHeight && (halfWidth / inSampleSize) >= requestedWidth) {
+//                inSampleSize *= 2;
+//            }
+//        }
+//        return inSampleSize;
+//    }
 
     private String generateThumbnailFilename(String format, BitmapFactory.Options options) {
         String fileName = "thumb-" + UUID.randomUUID().toString() + ".";
@@ -221,6 +223,40 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             else {
                 image.compress(Bitmap.CompressFormat.JPEG, 90, out);
             }
+        }
+    }
+
+    // For now this code will assume that the requestedWidth and requestedHeight are the same if they are not the same
+    // image is returned. Aspect ratio is kept so the image is cropped in the center.
+    private Bitmap scaleAndCropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        if (requestedHeight == requestedWidth) {
+            int newHeight = requestedHeight;
+            int newWidth = requestedWidth;
+            float scale = newWidth / width;
+            int offsetX = 0;
+            int offsetY = 0;
+            // if width is smaller than height, use width to scale.
+            if (height > width) {
+                newHeight = (height * requestedWidth) / width;
+                scale = newWidth / width;
+                offsetY = (newHeight - newWidth) / 2;
+            }
+            else if (width > height) {
+                newWidth = (width * requestedHeight) / height;
+                scale = newWidth / width;
+                offsetX = (newWidth - newHeight) / 2;
+            }
+
+            Matrix matrix = new Matrix();
+            matrix.postScale(scale, scale);
+
+            return Bitmap.createBitmap(image, offsetX, offsetY, newWidth, newHeight, matrix, false);
+        }
+        else {
+            return image;
         }
     }
 
