@@ -175,7 +175,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-//        Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
+        BitmapFactory.decodeFile(fileUri, options);
 
         options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
         //Log.d("RNCameraRoll", " image: " + photoForThumbnail.toString());
@@ -236,7 +236,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - width: " + requestedWidth + " height: " + requestedHeight);
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
-        double scaleRatio = 1;
+        float scaleRatio = 1;
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = requestedWidth / bitmapWidth;
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedWidth + "/" + bitmapWidth + "=" + scaleRatio);
