@@ -86,7 +86,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
             options.inJustDecodeBounds = false;
-            Bitmap sampledImage = scaleAndCropBitmap(BitmapFactory.decodeFile(uri, options), width, height);
+            Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
 //            Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
             String filename = generateThumbnailFilename(forVideoFormat, options);
