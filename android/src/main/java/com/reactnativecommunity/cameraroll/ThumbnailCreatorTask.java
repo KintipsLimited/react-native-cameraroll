@@ -232,12 +232,14 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         int bitmapWidth = image.getWidth();
         int bitmapHeight = image.getHeight();
         // if width < height, use requestedWidth as reference for scale
+        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - width: " + requestedWidth + " height: " + requestedHeight);
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
         double scaleRatio = 1;
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = requestedWidth / bitmapWidth;
             resultHeight = (int) (requestedHeight * scaleRatio);
+            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + requestedHeight * scaleRatio);
         }
         // if height < width, use requestedHeight as reference for scale
         else if (bitmapHeight < bitmapWidth) {
