@@ -87,7 +87,6 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
             options.inJustDecodeBounds = false;
             Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
-//            Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
             String filename = generateThumbnailFilename(forVideoFormat, options);
 
@@ -259,53 +258,29 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
         //perform cropping to "center" of the image
-        return scaledDown;
+        return cropBitmap(scaledDown, requestedWidth, requestedHeight);
     }
 
-    // For now this code will assume that the requestedWidth and requestedHeight are the same if they are not the same
-    // image is returned. Aspect ratio is kept so the image is cropped in the center.
-//    private Bitmap scaleAndCropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
-//        int width = image.getWidth();
-//        int height = image.getHeight();
-//
-//        if (requestedHeight == requestedWidth) {
-//            int newHeight = requestedHeight;
-//            int newWidth = requestedWidth;
-//            float scale = newWidth / width;
-//            int offsetX = 0;
-//            int offsetY = 0;
-//            // if width is smaller than height, use width to scale.
-//            if (height > width) {
-//                newHeight = (height * requestedWidth) / width;
-//                scale = newWidth / width;
-//                offsetY = (newHeight - newWidth) / 2;
-//            }
-//            else if (width > height) {
-//                newWidth = (width * requestedHeight) / height;
-//                scale = newHeight / height;
-//                offsetX = (newWidth - newHeight) / 2;
-//            }
-//
-//            Matrix matrix = new Matrix();
-//            matrix.postScale(scale, scale);
-//
-//            StringBuilder b = new StringBuilder();
-//            b.append("scaleAndCropBitmap: \n");
-//            b.append("image " + image);
-//            b.append("\n");
-//            b.append("offX " + offsetX);
-//            b.append("offY " + offsetY);
-//            b.append("nWidth " + newWidth);
-//            b.append("nHeight " + newHeight);
-//
-//            Log.d("RNCameraRoll", b.toString());
-//
-//            return Bitmap.createBitmap(image, 0, 0, newWidth, newHeight, matrix, false);
-//        }
-//        else {
-//            return image;
-//        }
-//    }
+    private Bitmap cropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
+        int bitmapWidth = image.getWidth();
+        int bitmapHeight = image.getHeight();
+
+        if (bitmapWidth == requestedWidth && bitmapHeight == requestedHeight) {
+            return image;
+        }
+
+        int offsetX = 0;
+        int offsetY = 0;
+
+        if (bitmapWidth < bitmapHeight) {
+            offsetY = (int) ((bitmapHeight - bitmapWidth) / 2);
+        }
+        else if (bitmapHeight < bitmapWidth) {
+            offsetX = (int) ((bitmapWidth - bitmapHeight) / 2);
+        }
+
+        return Bitmap.createBitmap(image, offsetX, offsetY, requestedWidth, requestedHeight);
+    }
 
     private File createDirIfNotExists(String path) {
         File dir = new File(path);
