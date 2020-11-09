@@ -177,7 +177,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
 
         options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
-        Log.d("RNCameraRoll", " image: " + photoForThumbnail.toString());
+        //Log.d("RNCameraRoll", " image: " + photoForThumbnail.toString());
         options.inJustDecodeBounds = false;
 //        return new SampledBitmap(scaleAndCropBitmap(photoForThumbnail, width, height), options);
         return new SampledBitmap(BitmapFactory.decodeFile(fileUri, options), options);
