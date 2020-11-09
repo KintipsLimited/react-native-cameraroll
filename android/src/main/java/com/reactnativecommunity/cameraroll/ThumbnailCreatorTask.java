@@ -136,9 +136,9 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         try {
             SampledBitmap decodedSample = decodeSampledBitmapFromFile(uri, width, height);
+            Log.d("RNCameraRoll", "Bitmap created with width: " + width + " height: " + height);
             Bitmap bitmap = scaleAndCropBitmap(decodedSample.bitmap, width, height);
             BitmapFactory.Options options = decodedSample.options;
-            Log.d("RNCameraRoll", "Bitmap created");
             String filename = generateThumbnailFilename(format, options);
             File imageFile = new File(thumbnailDir, filename);
             imageFile.createNewFile();
