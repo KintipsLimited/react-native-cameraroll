@@ -67,8 +67,12 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         try {
             File thumbnailDir = createDirIfNotExists(thumbnailFolder);
             if (assetType.equals(MEDIA_PHOTO)) {
-                createPhotoThumbnail(thumbnailDir, thumbnailFolder);
+                String photoFolder = thumbnailFolder + "/" + MEDIA_PHOTO;
+                File photoDir = createDirIfNotExists(photoFolder);
+                createPhotoThumbnail(photoDir, photoFolder);
             } else if (assetType.equals(MEDIA_VIDEO)) {
+                String videoFolder = thumbnailFolder + "/" + MEDIA_PHOTO;
+                File videoDir = createDirIfNotExists(thumbnailFolder + "/" + MEDIA_VIDEO);
                 createVideoThumbnail(thumbnailDir, thumbnailFolder);
             }
             promise.resolve(null);
