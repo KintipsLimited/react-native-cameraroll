@@ -89,7 +89,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
             String filename = generateThumbnailFilename(forVideoFormat, options);
-        
+
             File imageFile = new File(thumbnailDir, filename);
             imageFile.createNewFile();
             fOut = new FileOutputStream(imageFile);
@@ -240,7 +240,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             scaleRatio = ((float) requestedWidth) / bitmapWidth;
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedWidth + "/" + bitmapWidth + "=" + scaleRatio);
             resultHeight = (int) (bitmapHeight * scaleRatio);
-            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + (requestedHeight * scaleRatio));
+            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + (bitmapHeight * scaleRatio));
         }
         // if height < width, use requestedHeight as reference for scale
         else if (bitmapHeight < bitmapWidth) {
@@ -248,12 +248,12 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedHeight + "/" + bitmapHeight + "=" + scaleRatio);
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + scaleRatio);
             resultWidth = (int) (bitmapWidth * scaleRatio);
-            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + (requestedWidth * scaleRatio));
+            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + (bitmapWidth * scaleRatio));
         }
-        // if height and width are equal, simply scale to requestedWidth
-        else {
-            scaleRatio = requestedWidth / bitmapWidth;
-        }
+        // // if height and width are equal, simply scale to requestedWidth
+        // else {
+        //     scaleRatio = requestedWidth / bitmapWidth;
+        // }
         Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap - result width: " + resultWidth + " result height: " + resultHeight);
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
@@ -264,7 +264,8 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private Bitmap cropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
         int bitmapWidth = image.getWidth();
         int bitmapHeight = image.getHeight();
-
+        Log.d("RNCameraRoll", "cropBitmap to be cropped - width: " + bitmapWidth + " height: " + bitmapHeight);
+        Log.d("RNCameraRoll", "cropBitmap requested dims - width: " + requestedWidth + " height: " + requestedHeight);
         if (bitmapWidth == requestedWidth && bitmapHeight == requestedHeight) {
             return image;
         }
@@ -279,7 +280,9 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             offsetX = (int) ((bitmapWidth - bitmapHeight) / 2);
         }
 
-        return Bitmap.createBitmap(image, offsetX, offsetY, requestedWidth, requestedHeight);
+        Bitmap cropped = Bitmap.createBitmap(image, offsetX, offsetY, requestedWidth, requestedHeight);
+        Log.d("RNCameraRoll", "cropBitmap created - width: " + cropped.getWidth() + " height: " + cropped.getHeight());
+        return cropped;
     }
 
     private File createDirIfNotExists(String path) {
