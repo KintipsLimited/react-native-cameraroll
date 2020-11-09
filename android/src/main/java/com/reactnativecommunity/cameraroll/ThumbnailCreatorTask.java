@@ -186,7 +186,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private int calculateInSampleSize(final int bitmapWidth, final int bitmapHeight, int requestedWidth, int requestedHeight) {
         int inSampleSize = 1;
 
-        if (bitmapWidth > requestedHeight || bitmapHeight > requestedWidth) {
+        if (bitmapHeight > requestedHeight || bitmapWidth > requestedWidth) {
             final int halfHeight = bitmapHeight / 2;
             final int halfWidth = bitmapWidth / 2;
 
