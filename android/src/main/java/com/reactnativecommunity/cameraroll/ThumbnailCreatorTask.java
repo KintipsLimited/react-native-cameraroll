@@ -86,7 +86,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
             options.inJustDecodeBounds = false;
-            Bitmap sampledImage = BitmapFactory.decodeFile(uri, options);
+            Bitmap sampledImage = scaleAndCropBitmap(BitmapFactory.decodeFile(uri, options), width, height);
 //            Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
             String filename = generateThumbnailFilename(forVideoFormat, options);
@@ -136,7 +136,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         try {
             SampledBitmap decodedSample = decodeSampledBitmapFromFile(uri, width, height);
-            Bitmap bitmap = decodedSample.bitmap;
+            Bitmap bitmap = scaleAndCropBitmap(decodedSample.bitmap, width, height);
             BitmapFactory.Options options = decodedSample.options;
             Log.d("RNCameraRoll", "Bitmap created");
             String filename = generateThumbnailFilename(format, options);
@@ -225,6 +225,32 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
                 image.compress(Bitmap.CompressFormat.JPEG, 90, out);
             }
         }
+    }
+
+    private Bitmap scaleAndCropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
+        int bitmapWidth = image.getWidth();
+        int bitmapHeight = image.getHeight();
+        // if width < height, use requestedWidth as reference for scale
+        int resultWidth = requestedWidth;
+        int resultHeight = requestedHeight;
+        double scaleRatio = 1;
+        if (bitmapWidth < bitmapHeight) {
+            scaleRatio = requestedWidth / bitmapWidth;
+            resultHeight = (int) (requestedHeight * scaleRatio);
+        }
+        // if height < width, use requestedHeight as reference for scale
+        else if (bitmapHeight < bitmapWidth) {
+            scaleRatio = requestedHeight / bitmapHeight;
+            resultWidth = (int) (requestedWidth * scaleRatio);
+        }
+        // if height and width are equal, simply scale to requestedWidth
+        else {
+            scaleRatio = requestedWidth / bitmapWidth;
+        }
+        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
+
+        //perform cropping to "center" of the image
+        return scaledDown;
     }
 
     // For now this code will assume that the requestedWidth and requestedHeight are the same if they are not the same
