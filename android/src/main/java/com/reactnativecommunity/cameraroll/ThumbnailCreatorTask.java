@@ -232,6 +232,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         int bitmapWidth = image.getWidth();
         int bitmapHeight = image.getHeight();
         // if width < height, use requestedWidth as reference for scale
+        Log.d("RNCameraRoll", "scaleAndCropBitmap new sampled width: " + bitmapWidth + " height: " + bitmapHeight);
         Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - width: " + requestedWidth + " height: " + requestedHeight);
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
@@ -245,12 +246,13 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         else if (bitmapHeight < bitmapWidth) {
             scaleRatio = requestedHeight / bitmapHeight;
             resultWidth = (int) (requestedWidth * scaleRatio);
+            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + requestedWidth * scaleRatio);
         }
         // if height and width are equal, simply scale to requestedWidth
         else {
             scaleRatio = requestedWidth / bitmapWidth;
         }
-        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap - width: " + resultWidth + " height: " + resultHeight);
+        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap - result width: " + resultWidth + " result height: " + resultHeight);
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
         //perform cropping to "center" of the image
