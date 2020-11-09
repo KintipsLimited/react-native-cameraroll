@@ -240,7 +240,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = requestedWidth / bitmapWidth;
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedWidth + "/" + bitmapWidth + "=" + scaleRatio);
-            resultHeight = (int) (requestedHeight * scaleRatio);
+            resultHeight = (int) (bitmapHeight * scaleRatio);
             Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + (requestedHeight * scaleRatio));
         }
         // if height < width, use requestedHeight as reference for scale
@@ -248,7 +248,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             scaleRatio = requestedHeight / bitmapHeight;
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedHeight + "/" + bitmapHeight + "=" + scaleRatio);
             Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + scaleRatio);
-            resultWidth = (int) (requestedWidth * scaleRatio);
+            resultWidth = (int) (bitmapWidth * scaleRatio);
             Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + (requestedWidth * scaleRatio));
         }
         // if height and width are equal, simply scale to requestedWidth
