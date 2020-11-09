@@ -162,6 +162,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         }
         catch (Exception e) {
+            Log.d("RNCameraRoll", e.toString());
             promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, e);
         }
     }
@@ -174,7 +175,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
+//        Bitmap photoForThumbnail = BitmapFactory.decodeFile(fileUri, options);
 
         options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, width, height);
         //Log.d("RNCameraRoll", " image: " + photoForThumbnail.toString());
@@ -247,6 +248,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         else {
             scaleRatio = requestedWidth / bitmapWidth;
         }
+        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap - width: " + resultWidth + " height: " + resultHeight);
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
         //perform cropping to "center" of the image
