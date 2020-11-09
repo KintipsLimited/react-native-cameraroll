@@ -89,15 +89,15 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
             String filename = generateThumbnailFilename(forVideoFormat, options);
-
+        
             File imageFile = new File(thumbnailDir, filename);
             imageFile.createNewFile();
             fOut = new FileOutputStream(imageFile);
 
             if (PNG_EXT.equals(format)) {
-                image.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+                sampledImage.compress(Bitmap.CompressFormat.PNG, 100, fOut);
             } else {
-                image.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+                sampledImage.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
             }
 
             fOut.flush();
