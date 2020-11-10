@@ -25,8 +25,8 @@ import java.util.UUID;
 public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private final ReactApplicationContext reactContext;
 
-    private static final String MEDIA_PHOTO = "PHOTO";
-    private static final String MEDIA_VIDEO = "VIDEO";
+    private static final String MEDIA_PHOTO = "photos";
+    private static final String MEDIA_VIDEO = "videos";
 
     private static final String JPEG_EXT = "jpeg";
     private static final String PNG_EXT = "png";
@@ -66,19 +66,21 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         Log.d("RNCameraRoll", "Thumbnail folder: " + thumbnailFolder);
         try {
             File thumbnailDir = createDirIfNotExists(thumbnailFolder);
-            if (assetType.equals(MEDIA_PHOTO)) {
+            if (assetType.equalsIgnoreCase(MEDIA_PHOTO)) {
                 String photoFolder = thumbnailFolder + "/" + MEDIA_PHOTO;
                 File photoDir = createDirIfNotExists(photoFolder);
                 createPhotoThumbnail(photoDir, photoFolder);
-            } else if (assetType.equals(MEDIA_VIDEO)) {
+                return;
+            } else if (assetType.equalsIgnoreCase(MEDIA_VIDEO)) {
                 String videoFolder = thumbnailFolder + "/" + MEDIA_PHOTO;
                 File videoDir = createDirIfNotExists(thumbnailFolder + "/" + MEDIA_VIDEO);
                 createVideoThumbnail(videoDir, videoFolder);
+                return;
             }
             promise.resolve(null);
         }
         catch (Exception e) {
-
+            promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, e);
         }
     }
 
