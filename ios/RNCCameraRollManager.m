@@ -630,8 +630,8 @@ RCT_EXPORT_METHOD(deletePhotos:(NSArray<NSString *>*)assets
   ];
 }
 
-RCT_EXPORT_METHOD(getThumbnail:(NSString *) url
-                  (NSDictionary *) params
+RCT_EXPORT_METHOD(getThumbnail:(NSString *)url
+                  (NSDictionary *)params
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
   NSUInteger const width = [params objectForKey:@"width"] ? [RCTConvert NSInteger:@"width"] : 0;
