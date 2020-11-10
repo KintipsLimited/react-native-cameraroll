@@ -23,6 +23,8 @@
 
 #import "RNCAssetsLibraryRequestHandler.h"
 
+#import <AVFoundation/AVFoundation.h>
+
 @implementation RCTConvert (PHAssetCollectionSubtype)
 
 RCT_ENUM_CONVERTER(PHAssetCollectionSubtype, (@{
@@ -96,6 +98,12 @@ static NSString *const kErrorUnableToLoad = @"E_UNABLE_TO_LOAD";
 
 static NSString *const kErrorAuthRestricted = @"E_PHOTO_LIBRARY_AUTH_RESTRICTED";
 static NSString *const kErrorAuthDenied = @"E_PHOTO_LIBRARY_AUTH_DENIED";
+
+static NSString *const kMedia_Photos = @"photos";
+static NSString *const kMedia_Videos = @"videos";
+static NSString *const kJpegExt = @"jpeg";
+static NSString *const kPngExt = @"png";
+static NSString *const kPngMimeType = @"image/png";
 
 typedef void (^PhotosAuthorizedBlock)(void);
 
@@ -620,6 +628,43 @@ RCT_EXPORT_METHOD(deletePhotos:(NSArray<NSString *>*)assets
     }
   }
   ];
+}
+
+RCT_EXPORT_METHOD(getThumbnail:(NSString *) url
+                  (NSDictionary *) params
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  NSUInteger const width = [params objectForKey:@"width"] ? [RCTConvert NSInteger:@"width"] : 0;
+  NSUInteger const height = [params objectForKey:@"height"] ? [RCTConvert NSInteger:@"height"] : 0;
+  NSString *const format = [params objectForKey:@"format"] ? [RCTConvert NSString:params[@"format"]] : nil;
+  NSUInteger const timestamp = [params objectForKey:[@"timestamp"]] ? [RCTConvert NSInteger:@"timestamp"] : 0;
+  NSString *const assetType = [params objectForKey:[@"assetType"]] ? [RCTConvert NSString:params[@"assetType"]] : nil;
+  
+  NSString *const lowercaseAssetType = [assetType lowercaseString];
+  if ([lowercaseAssetType isEqualToString:kMedia_Photos]) {
+    createPhotoThumbnail(url, width, height, format, resolve, reject);
+  }
+  else if ([lowercaseAssetType isEqualToString:kMedia_Videos]) {
+    
+  }
+  else {
+    resolve(null);
+  }
+}
+
+static void createPhotoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+  PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[url] options:nil];
+  NSLog("fetch result width: " + [fetchResult.pixelWidth]);
+  NSLog("fetch result height: " + [fetchResult.pixelHeight]);
+  resolve(@{
+    @"width" : fetchResult.pixelWidth,
+    @"height" : fetchResult.pixelHeight
+  });
+}
+
+static void createVideoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+  
+  resolve(null);
 }
 
 static void checkPhotoLibraryConfig()
