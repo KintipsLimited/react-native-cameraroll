@@ -122,7 +122,7 @@ export type GetThumbnailParams = {
   timestamp: number, /** for video only */
   width: number,
   height: number,
-  assetType: "PHOTO" | "VIDEO"
+  assetType: "Photos" | "Videos"
 }
 
 export type Thumbnail = {

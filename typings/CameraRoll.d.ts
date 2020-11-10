@@ -84,7 +84,7 @@ declare namespace CameraRoll {
     timestamp: number, /** for video only */
     width: number,
     height: number,
-    assetType: "PHOTO" | "VIDEO"
+    assetType: "Photos" | "Videos"
   }
   
   type Thumbnail = {
