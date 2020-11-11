@@ -237,29 +237,25 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         int bitmapWidth = image.getWidth();
         int bitmapHeight = image.getHeight();
         // if width < height, use requestedWidth as reference for scale
-        Log.d("RNCameraRoll", "scaleAndCropBitmap new sampled width: " + bitmapWidth + " height: " + bitmapHeight);
-        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - width: " + requestedWidth + " height: " + requestedHeight);
+//        Log.d("RNCameraRoll", "scaleAndCropBitmap new sampled width: " + bitmapWidth + " height: " + bitmapHeight);
+//        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - width: " + requestedWidth + " height: " + requestedHeight);
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
         float scaleRatio = 1;
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = ((float) requestedWidth) / bitmapWidth;
-            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedWidth + "/" + bitmapWidth + "=" + scaleRatio);
+//            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedWidth + "/" + bitmapWidth + "=" + scaleRatio);
             resultHeight = (int) (bitmapHeight * scaleRatio);
-            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + (bitmapHeight * scaleRatio));
+//            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + (bitmapHeight * scaleRatio));
         }
         // if height < width, use requestedHeight as reference for scale
         else if (bitmapHeight < bitmapWidth) {
             scaleRatio = ((float) requestedHeight) / bitmapHeight;
-            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedHeight + "/" + bitmapHeight + "=" + scaleRatio);
-            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + scaleRatio);
+//            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedHeight + "/" + bitmapHeight + "=" + scaleRatio);
+//            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + scaleRatio);
             resultWidth = (int) (bitmapWidth * scaleRatio);
-            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + (bitmapWidth * scaleRatio));
+//            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + (bitmapWidth * scaleRatio));
         }
-        // // if height and width are equal, simply scale to requestedWidth
-        // else {
-        //     scaleRatio = requestedWidth / bitmapWidth;
-        // }
         Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap - result width: " + resultWidth + " result height: " + resultHeight);
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
