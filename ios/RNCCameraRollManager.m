@@ -107,6 +107,8 @@ static NSString *const kJpegExt = @"jpeg";
 static NSString *const kPngExt = @"png";
 static NSString *const kPngMimeType = @"image/png";
 
+static NSString *const kThumbnailFolder = @"/thumbnails/";
+
 typedef void (^PhotosAuthorizedBlock)(void);
 
 static void requestPhotoLibraryAccess(RCTPromiseRejectBlock reject, PhotosAuthorizedBlock authorizedBlock) {
@@ -648,24 +650,28 @@ RCT_EXPORT_METHOD(getThumbnail:(NSString *)url params:(NSDictionary *)params res
   NSLog(@"photo thumbnail - timestamp %lu", timestamp);
   NSLog(@"photo thumbnail - assetType %@", assetType);
   
-  NSString* tempDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
+  NSString* tempThumbDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
+  tempThumbDirectory = [tempThumbDirectory stringByAppendingString:@"/thumbnails/"];
     
-  [[NSFileManager defaultManager] createDirectoryAtPath:tempDirectory withIntermediateDirectories:YES attributes:nil error:nil];
+  [[NSFileManager defaultManager] createDirectoryAtPath:tempThumbDirectory withIntermediateDirectories:YES attributes:nil error:nil];
     
   NSString *const lowercaseAssetType = [assetType lowercaseString];
   if ([lowercaseAssetType isEqualToString:kMedia_Photos]) {
-    createPhotoThumbnail(url, width, height, format, resolve, reject);
+    createPhotoThumbnail(url, width, height, format, tempThumbDirectory, resolve, reject);
   }
   else if ([lowercaseAssetType isEqualToString:kMedia_Videos]) {
-    createVideoThumbnail(url, width, height, format, timestamp, resolve, reject);
+    createVideoThumbnail(url, width, height, format, tempThumbDirectory, timestamp, resolve, reject);
   }
   else {
     resolve(nil);
   }
 }
 
-static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInteger requestedHeight, NSString* format, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInteger requestedHeight, NSString* format, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
   PHFetchResult* fetchResult = nil;
+  
+  NSString* photoThumbnailDir = = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Photos]];
+  [[NSFileManager defaultManager] createDirectoryAtPath:photoThumbnailDir withIntermediateDirectories:YES attributes:nil error:nil];
     
   NSURL* url = [NSURL URLWithString:uri];
   if ([url.scheme isEqualToString:@"ph"]) {
@@ -676,22 +682,18 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
     
   PHAsset* asset = [fetchResult firstObject];
   if (asset) {
-      showSquareImageForAsset(asset, requestWidth, requestedHeight);
       NSLog(@"photo thumbnail asset url %@", url);
       NSLog(@"photo thumbnail asset %@", asset);
       NSLog(@"photo thumbnail %lu %lu", asset.pixelWidth, asset.pixelHeight);
       NSLog(@"photo thumbnail - fetch result count %lu", fetchResult.count);
-      resolve(@{
-          @"width" : [NSNumber numberWithInteger: asset.pixelWidth],
-          @"height" : [NSNumber numberWithInteger: asset.pixelHeight]
-      });
+      showSquareImageForAsset(asset, format, requestWidth, requestedHeight, photoThumbnailDir);
   }
   else {
       reject(kErrorFileDoesntExist, @"Unable to find file.", nil);
   }
 }
 
-static void showSquareImageForAsset(PHAsset* asset, NSUInteger requestedWidth, NSUInteger requestedHeight) {
+static void showSquareImageForAsset(PHAsset* asset, NSString* format, NSUInteger requestedWidth, NSUInteger requestedHeight, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
     NSLog(@"image from original size width: %lu", asset.pixelWidth);
     NSLog(@"image from original size height: %lu", asset.pixelHeight);
     CGSize retinaSquare = CGSizeMake(requestedWidth, requestedHeight);
@@ -721,15 +723,37 @@ static void showSquareImageForAsset(PHAsset* asset, NSUInteger requestedWidth, N
      contentMode:PHImageContentModeAspectFit
      options:cropToSquare
      resultHandler:^(UIImage *result, NSDictionary *info) {
+        generateThumbnail(result, format, thumbnailDir, resolve, reject);
         NSLog(@"image from asset size info: %@", info);
         NSLog(@"image from asset size width: %f", result.size.width);
         NSLog(@"image from asset size height  %f", result.size.height);
     }];
 }
 
+static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+    NSLog(@"generating thumbnail file");
+    NSData *data = nil;
+    NSString *fullPath = nil;
+  
+    if ([format isEqual: @"png"]) {
+        data = UIImagePNGRepresentation(thumbnail);
+        fullPath = [tempDirectory stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.png",[[NSProcessInfo processInfo] globallyUniqueString]]];
+    } else {
+        data = UIImageJPEGRepresentation(thumbnail, 1.0);
+        fullPath = [tempDirectory stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.jpeg",[[NSProcessInfo processInfo] globallyUniqueString]]];
+    }
+  
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager createFileAtPath:fullPath contents:data attributes:nil];
+    resolve(@{
+        @"path"     : fullPath,
+        @"width"    : [NSNumber numberWithFloat: thumbnail.size.width],
+        @"height"   : [NSNumber numberWithFloat: thumbnail.size.height]
+    });
+}
 
-
-static void createVideoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+static void createVideoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, NSString* thumbnailDir, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+  NSString* videoThumbnailDir = = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Videos]];
   
   resolve(nil);
 }
