@@ -99,6 +99,8 @@ static NSString *const kErrorUnableToLoad = @"E_UNABLE_TO_LOAD";
 static NSString *const kErrorAuthRestricted = @"E_PHOTO_LIBRARY_AUTH_RESTRICTED";
 static NSString *const kErrorAuthDenied = @"E_PHOTO_LIBRARY_AUTH_DENIED";
 
+static NSString *const kErrorFileDoesntExist = @"E_FILE_DOESNT_EXIST";
+
 static NSString *const kMedia_Photos = @"photos";
 static NSString *const kMedia_Videos = @"videos";
 static NSString *const kJpegExt = @"jpeg";
@@ -630,41 +632,106 @@ RCT_EXPORT_METHOD(deletePhotos:(NSArray<NSString *>*)assets
   ];
 }
 
-RCT_EXPORT_METHOD(getThumbnail:(NSString *)url
-                  (NSDictionary *)params
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-  NSUInteger const width = [params objectForKey:@"width"] ? [RCTConvert NSInteger:@"width"] : 0;
-  NSUInteger const height = [params objectForKey:@"height"] ? [RCTConvert NSInteger:@"height"] : 0;
-  NSString *const format = [params objectForKey:@"format"] ? [RCTConvert NSString:params[@"format"]] : nil;
-  NSUInteger const timestamp = [params objectForKey:[@"timestamp"]] ? [RCTConvert NSInteger:@"timestamp"] : 0;
-  NSString *const assetType = [params objectForKey:[@"assetType"]] ? [RCTConvert NSString:params[@"assetType"]] : nil;
+RCT_EXPORT_METHOD(getThumbnail:(NSString *)url params:(NSDictionary *)params resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
+  NSUInteger const width = [params objectForKey:@"width"] ? [RCTConvert NSInteger:params[@"width"]] : 0;
+  NSUInteger const height = [params objectForKey:@"height"] ? [RCTConvert NSInteger:params[@"height"]] : 0;
+  NSString *const format = [params objectForKey:@"format"] ? [RCTConvert NSString:params[@"format"]] : @"jpeg";
+  NSUInteger const timestamp = [params objectForKey:@"timestamp"] ? [RCTConvert NSInteger:params[@"timestamp"]] : 0;
+  NSString *const assetType = [params objectForKey:@"assetType"] ? [RCTConvert NSString:params[@"assetType"]] : nil;
+    
+  NSLog(@"photo thumbnail - params %@", params);
+  NSLog(@"photo thumbnail - url %@", url);
   
+  NSLog(@"photo thumbnail - req width %lu", width);
+  NSLog(@"photo thumbnail - req height %lu", height);
+  NSLog(@"photo thumbnail - format %@", format);
+  NSLog(@"photo thumbnail - timestamp %lu", timestamp);
+  NSLog(@"photo thumbnail - assetType %@", assetType);
+  
+  NSString* tempDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
+    
+  [[NSFileManager defaultManager] createDirectoryAtPath:tempDirectory withIntermediateDirectories:YES attributes:nil error:nil];
+    
   NSString *const lowercaseAssetType = [assetType lowercaseString];
   if ([lowercaseAssetType isEqualToString:kMedia_Photos]) {
     createPhotoThumbnail(url, width, height, format, resolve, reject);
   }
   else if ([lowercaseAssetType isEqualToString:kMedia_Videos]) {
-    
+    createVideoThumbnail(url, width, height, format, timestamp, resolve, reject);
   }
   else {
-    resolve(null);
+    resolve(nil);
   }
 }
 
-static void createPhotoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-  PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[url] options:nil];
-  NSLog("fetch result width: " + [fetchResult.pixelWidth]);
-  NSLog("fetch result height: " + [fetchResult.pixelHeight]);
-  resolve(@{
-    @"width" : fetchResult.pixelWidth,
-    @"height" : fetchResult.pixelHeight
-  });
+static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInteger requestedHeight, NSString* format, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+  PHFetchResult* fetchResult = nil;
+    
+  NSURL* url = [NSURL URLWithString:uri];
+  if ([url.scheme isEqualToString:@"ph"]) {
+      fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[[uri substringFromIndex: 5]] options:nil];
+  } else {
+      fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
+  }
+    
+  PHAsset* asset = [fetchResult firstObject];
+  if (asset) {
+      showSquareImageForAsset(asset, requestWidth, requestedHeight);
+      NSLog(@"photo thumbnail asset url %@", url);
+      NSLog(@"photo thumbnail asset %@", asset);
+      NSLog(@"photo thumbnail %lu %lu", asset.pixelWidth, asset.pixelHeight);
+      NSLog(@"photo thumbnail - fetch result count %lu", fetchResult.count);
+      resolve(@{
+          @"width" : [NSNumber numberWithInteger: asset.pixelWidth],
+          @"height" : [NSNumber numberWithInteger: asset.pixelHeight]
+      });
+  }
+  else {
+      reject(kErrorFileDoesntExist, @"Unable to find file.", nil);
+  }
 }
+
+static void showSquareImageForAsset(PHAsset* asset, NSUInteger requestedWidth, NSUInteger requestedHeight) {
+    NSLog(@"image from original size width: %lu", asset.pixelWidth);
+    NSLog(@"image from original size height: %lu", asset.pixelHeight);
+    CGSize retinaSquare = CGSizeMake(requestedWidth, requestedHeight);
+    NSLog(@"cg size from retina %f %f", retinaSquare.width, retinaSquare.height);
+    
+    PHImageRequestOptions *cropToSquare = [[PHImageRequestOptions alloc] init];
+    cropToSquare.resizeMode = PHImageRequestOptionsResizeModeExact;
+    
+    NSUInteger offsetX = 0;
+    NSUInteger offsetY = 0;
+    if (requestedWidth < requestedHeight) {
+        offsetY = (requestedHeight - requestedWidth) / 2;
+    }
+    else if (requestedHeight < requestedWidth) {
+        offsetX = (requestedWidth - requestedHeight) / 2;
+    }
+    
+    CGFloat cropSideLength = MIN(requestedWidth, requestedHeight);
+    CGRect square = CGRectMake(offsetX, offsetY, cropSideLength, cropSideLength);
+    CGRect cropRect = CGRectApplyAffineTransform(square, CGAffineTransformMakeScale(1.0 / asset.pixelWidth, 1.0 / asset.pixelHeight));
+    
+    cropToSquare.normalizedCropRect = cropRect;
+    
+    [[PHImageManager defaultManager]
+     requestImageForAsset:asset
+     targetSize:retinaSquare
+     contentMode:PHImageContentModeAspectFit
+     options:cropToSquare
+     resultHandler:^(UIImage *result, NSDictionary *info) {
+        NSLog(@"image from asset size info: %@", info);
+        NSLog(@"image from asset size width: %f", result.size.width);
+        NSLog(@"image from asset size height  %f", result.size.height);
+    }];
+}
+
+
 
 static void createVideoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
   
-  resolve(null);
+  resolve(nil);
 }
 
 static void checkPhotoLibraryConfig()
