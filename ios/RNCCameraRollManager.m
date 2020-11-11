@@ -670,7 +670,7 @@ RCT_EXPORT_METHOD(getThumbnail:(NSString *)url params:(NSDictionary *)params res
 static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInteger requestedHeight, NSString* format, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
   PHFetchResult* fetchResult = nil;
   
-  NSString* photoThumbnailDir = = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Photos]];
+  NSString* photoThumbnailDir = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Photos]];
   [[NSFileManager defaultManager] createDirectoryAtPath:photoThumbnailDir withIntermediateDirectories:YES attributes:nil error:nil];
     
   NSURL* url = [NSURL URLWithString:uri];
@@ -686,7 +686,7 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
       NSLog(@"photo thumbnail asset %@", asset);
       NSLog(@"photo thumbnail %lu %lu", asset.pixelWidth, asset.pixelHeight);
       NSLog(@"photo thumbnail - fetch result count %lu", fetchResult.count);
-      showSquareImageForAsset(asset, format, requestWidth, requestedHeight, photoThumbnailDir);
+      showSquareImageForAsset(asset, format, requestWidth, requestedHeight, photoThumbnailDir, resolve, reject);
   }
   else {
       reject(kErrorFileDoesntExist, @"Unable to find file.", nil);
@@ -701,19 +701,30 @@ static void showSquareImageForAsset(PHAsset* asset, NSString* format, NSUInteger
     
     PHImageRequestOptions *cropToSquare = [[PHImageRequestOptions alloc] init];
     cropToSquare.resizeMode = PHImageRequestOptionsResizeModeExact;
+    NSUInteger assetWidth = asset.pixelWidth;
+    NSUInteger assetHeight = asset.pixelHeight;
     
     NSUInteger offsetX = 0;
     NSUInteger offsetY = 0;
-    if (requestedWidth < requestedHeight) {
+    CGFloat scaleRatio = 1;
+    
+    if (assetWidth < assetHeight) {
+//        scaleRatio = requestedHeight / assetHeight;
+        scaleRatio = requestedWidth / assetWidth;
         offsetY = (requestedHeight - requestedWidth) / 2;
     }
-    else if (requestedHeight < requestedWidth) {
+    else if (assetHeight < assetWidth) {
+//        scaleRatio = requestedWidth / assetWidth;
+        scaleRatio = requestedHeight / assetHeight;
         offsetX = (requestedWidth - requestedHeight) / 2;
     }
+    else {
+        scaleRatio = requestedWidth / assetWidth;
+    }
     
-    CGFloat cropSideLength = MIN(requestedWidth, requestedHeight);
+    CGFloat cropSideLength = MIN(assetWidth, assetHeight);
     CGRect square = CGRectMake(offsetX, offsetY, cropSideLength, cropSideLength);
-    CGRect cropRect = CGRectApplyAffineTransform(square, CGAffineTransformMakeScale(1.0 / asset.pixelWidth, 1.0 / asset.pixelHeight));
+    CGRect cropRect = CGRectApplyAffineTransform(square, CGAffineTransformMakeScale(scaleRatio, scaleRatio));
     
     cropToSquare.normalizedCropRect = cropRect;
     
@@ -737,10 +748,10 @@ static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* th
   
     if ([format isEqual: @"png"]) {
         data = UIImagePNGRepresentation(thumbnail);
-        fullPath = [tempDirectory stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.png",[[NSProcessInfo processInfo] globallyUniqueString]]];
+        fullPath = [thumbnailDir stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.png",[[NSProcessInfo processInfo] globallyUniqueString]]];
     } else {
         data = UIImageJPEGRepresentation(thumbnail, 1.0);
-        fullPath = [tempDirectory stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.jpeg",[[NSProcessInfo processInfo] globallyUniqueString]]];
+        fullPath = [thumbnailDir stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.jpeg",[[NSProcessInfo processInfo] globallyUniqueString]]];
     }
   
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -753,7 +764,7 @@ static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* th
 }
 
 static void createVideoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, NSString* thumbnailDir, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-  NSString* videoThumbnailDir = = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Videos]];
+  NSString* videoThumbnailDir = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Videos]];
   
   resolve(nil);
 }
