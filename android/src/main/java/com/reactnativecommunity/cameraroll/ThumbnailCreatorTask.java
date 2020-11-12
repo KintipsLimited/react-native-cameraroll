@@ -233,58 +233,29 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         }
     }
 
+    /*
+    * Bitmap is scaled not exactly to size but according to the smaller dimension. This is to maintain aspect ratio.
+    * If the width of original bitmap is smaller, the bitmap is scaled down to requestedWidth and requestedHeight is ignored when scaling.
+    * If the height of original bitmap is smaller, the bitmap is scaled down to requestedHeight and requestedWidth is ignored when scaling.
+    * */
     private Bitmap scaleAndCropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
         int bitmapWidth = image.getWidth();
         int bitmapHeight = image.getHeight();
-        // if width < height, use requestedWidth as reference for scale
-//        Log.d("RNCameraRoll", "scaleAndCropBitmap new sampled width: " + bitmapWidth + " height: " + bitmapHeight);
-//        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - width: " + requestedWidth + " height: " + requestedHeight);
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
         float scaleRatio = 1;
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = ((float) requestedWidth) / bitmapWidth;
-//            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedWidth + "/" + bitmapWidth + "=" + scaleRatio);
             resultHeight = (int) (bitmapHeight * scaleRatio);
-//            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new height: " + (bitmapHeight * scaleRatio));
         }
         // if height < width, use requestedHeight as reference for scale
         else if (bitmapHeight < bitmapWidth) {
             scaleRatio = ((float) requestedHeight) / bitmapHeight;
-//            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + requestedHeight + "/" + bitmapHeight + "=" + scaleRatio);
-//            Log.d("RNCameraRoll", "createScaledBitmap scaleRatio: " + scaleRatio);
             resultWidth = (int) (bitmapWidth * scaleRatio);
-//            Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap passed parameters - new width: " + (bitmapWidth * scaleRatio));
         }
-        Log.d("RNCameraRoll", "scaleAndCropBitmap createScaledBitmap - result width: " + resultWidth + " result height: " + resultHeight);
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
-        //perform cropping to "center" of the image
-        return cropBitmap(scaledDown, requestedWidth, requestedHeight);
-    }
-
-    private Bitmap cropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
-        int bitmapWidth = image.getWidth();
-        int bitmapHeight = image.getHeight();
-        Log.d("RNCameraRoll", "cropBitmap to be cropped - width: " + bitmapWidth + " height: " + bitmapHeight);
-        Log.d("RNCameraRoll", "cropBitmap requested dims - width: " + requestedWidth + " height: " + requestedHeight);
-        if (bitmapWidth == requestedWidth && bitmapHeight == requestedHeight) {
-            return image;
-        }
-
-        int offsetX = 0;
-        int offsetY = 0;
-
-        if (bitmapWidth < bitmapHeight) {
-            offsetY = (int) ((bitmapHeight - bitmapWidth) / 2);
-        }
-        else if (bitmapHeight < bitmapWidth) {
-            offsetX = (int) ((bitmapWidth - bitmapHeight) / 2);
-        }
-
-        Bitmap cropped = Bitmap.createBitmap(image, offsetX, offsetY, requestedWidth, requestedHeight);
-        Log.d("RNCameraRoll", "cropBitmap created - width: " + cropped.getWidth() + " height: " + cropped.getHeight());
-        return cropped;
+        return scaledDown;
     }
 
     private File createDirIfNotExists(String path) {
