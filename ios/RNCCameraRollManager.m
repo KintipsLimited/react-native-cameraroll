@@ -640,15 +640,7 @@ RCT_EXPORT_METHOD(getThumbnail:(NSString *)url params:(NSDictionary *)params res
   NSString *const format = [params objectForKey:@"format"] ? [RCTConvert NSString:params[@"format"]] : @"jpeg";
   NSUInteger const timestamp = [params objectForKey:@"timestamp"] ? [RCTConvert NSInteger:params[@"timestamp"]] : 0;
   NSString *const assetType = [params objectForKey:@"assetType"] ? [RCTConvert NSString:params[@"assetType"]] : nil;
-    
-  NSLog(@"photo thumbnail - params %@", params);
-  NSLog(@"photo thumbnail - url %@", url);
   
-  NSLog(@"photo thumbnail - req width %lu", width);
-  NSLog(@"photo thumbnail - req height %lu", height);
-  NSLog(@"photo thumbnail - format %@", format);
-  NSLog(@"photo thumbnail - timestamp %lu", timestamp);
-  NSLog(@"photo thumbnail - assetType %@", assetType);
   
   NSString* tempThumbDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
   tempThumbDirectory = [tempThumbDirectory stringByAppendingString:@"/thumbnails/"];
@@ -682,10 +674,10 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
     
   PHAsset* asset = [fetchResult firstObject];
   if (asset) {
-      NSLog(@"photo thumbnail asset url %@", url);
-      NSLog(@"photo thumbnail asset %@", asset);
-      NSLog(@"photo thumbnail %lu %lu", asset.pixelWidth, asset.pixelHeight);
-      NSLog(@"photo thumbnail - fetch result count %lu", fetchResult.count);
+      NSLog(@"[createPhotoThumbnail] photo thumbnail asset url %@", url);
+      NSLog(@"[createPhotoThumbnail] photo thumbnail asset %@", asset);
+      NSLog(@"[createPhotoThumbnail] photo thumbnail %lu %lu", asset.pixelWidth, asset.pixelHeight);
+      NSLog(@"[createPhotoThumbnail] photo thumbnail - fetch result count %lu", fetchResult.count);
       showSquareImageForAsset(asset, format, requestWidth, requestedHeight, photoThumbnailDir, resolve, reject);
   }
   else {
@@ -694,55 +686,50 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
 }
 
 static void showSquareImageForAsset(PHAsset* asset, NSString* format, NSUInteger requestedWidth, NSUInteger requestedHeight, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-    NSLog(@"image from original size width: %lu", asset.pixelWidth);
-    NSLog(@"image from original size height: %lu", asset.pixelHeight);
-    CGSize retinaSquare = CGSizeMake(requestedWidth, requestedHeight);
-    NSLog(@"cg size from retina %f %f", retinaSquare.width, retinaSquare.height);
+    //Compute the size based on width and height comparisons.
+    //New target size should be based on the smaller dimension.
     
-    PHImageRequestOptions *cropToSquare = [[PHImageRequestOptions alloc] init];
-    cropToSquare.resizeMode = PHImageRequestOptionsResizeModeExact;
     NSUInteger assetWidth = asset.pixelWidth;
     NSUInteger assetHeight = asset.pixelHeight;
-    
-    NSUInteger offsetX = 0;
-    NSUInteger offsetY = 0;
-    CGFloat scaleRatio = 1;
+    CGSize targetSize = CGSizeMake(requestedWidth, requestedHeight);
     
     if (assetWidth < assetHeight) {
-//        scaleRatio = requestedHeight / assetHeight;
-        scaleRatio = requestedWidth / assetWidth;
-        offsetY = (requestedHeight - requestedWidth) / 2;
+        // If width is smaller than height, width is equal to the requestedWidth and height is
+        // adjusted accordingly
+        targetSize = CGSizeMake(requestedWidth, (assetHeight * requestedWidth) / assetWidth);
     }
     else if (assetHeight < assetWidth) {
-//        scaleRatio = requestedWidth / assetWidth;
-        scaleRatio = requestedHeight / assetHeight;
-        offsetX = (requestedWidth - requestedHeight) / 2;
-    }
-    else {
-        scaleRatio = requestedWidth / assetWidth;
+        // If height is smaller than height, height is equal to the requestedHeight and width is
+        // adjusted accordingly
+        targetSize = CGSizeMake( (assetWidth * requestedHeight) / assetHeight, requestedHeight);
     }
     
-    CGFloat cropSideLength = MIN(assetWidth, assetHeight);
-    CGRect square = CGRectMake(offsetX, offsetY, cropSideLength, cropSideLength);
-    CGRect cropRect = CGRectApplyAffineTransform(square, CGAffineTransformMakeScale(scaleRatio, scaleRatio));
+    PHImageRequestOptions *cropOptions = [[PHImageRequestOptions alloc] init];
+    cropOptions.resizeMode = PHImageRequestOptionsResizeModeExact;
+    cropOptions.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
     
-    cropToSquare.normalizedCropRect = cropRect;
+    NSLog(@"[createPhotoThumbnail] targetSize: %f %f", targetSize.width, targetSize.height);
+    NSLog(@"[createPhotoThumbnail] requested dimensions: %lu %lu", requestedWidth, requestedHeight);
     
     [[PHImageManager defaultManager]
      requestImageForAsset:asset
-     targetSize:retinaSquare
+     targetSize:targetSize
      contentMode:PHImageContentModeAspectFit
-     options:cropToSquare
+     options:cropOptions
      resultHandler:^(UIImage *result, NSDictionary *info) {
-        generateThumbnail(result, format, thumbnailDir, resolve, reject);
-        NSLog(@"image from asset size info: %@", info);
-        NSLog(@"image from asset size width: %f", result.size.width);
-        NSLog(@"image from asset size height  %f", result.size.height);
+        NSNumber *degradedKey = [info objectForKey:@"PHImageResultIsDegradedKey"];
+        if ([degradedKey intValue] == 0) {
+            NSLog(@"[createPhotoThumbnail] asset size info: %lu %lu", assetWidth, assetHeight);
+            NSLog(@"[createPhotoThumbnail] image from asset size info: %@", info);
+            NSLog(@"[createPhotoThumbnail] image from asset size width: %f", result.size.width);
+            NSLog(@"[createPhotoThumbnail] image from asset size height  %f", result.size.height);
+            generateThumbnail(result, format, thumbnailDir, resolve, reject);
+        }
     }];
 }
 
 static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-    NSLog(@"generating thumbnail file");
+    NSLog(@"[createPhotoThumbnail] generating thumbnail file");
     NSData *data = nil;
     NSString *fullPath = nil;
   
