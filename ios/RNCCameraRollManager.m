@@ -790,26 +790,35 @@ static void generateVideoThumbImage(AVURLAsset* asset, NSUInteger timeStamp, NSU
         @throw e;
     }
     
-    CGFloat scaleFloat = 1.0;
-    NSUInteger imageWidth = CGImageGetWidth(imageRef);
-    NSUInteger imageHeight = CGImageGetHeight(imageRef);
     
-    if (imageWidth < imageHeight) {
-        scaleFloat = ((float) imageWidth) / requestedWidth;
-    }
-    else if (imageHeight < imageWidth) {
-        scaleFloat = ((float) imageHeight) / requestedHeight;
-    }
-    else {
-        scaleFloat = ((float) imageWidth) / requestedWidth;
-    }
-    NSLog(@"[createVideoThumbnail] scaleFloat %f", scaleFloat);
-
-    UIImage *thumbnail = [UIImage imageWithCGImage:imageRef scale:scaleFloat orientation:UIImageOrientationUp];
-    NSLog(@"[createVideoThumbnail] generateVideoThumbImage width %f height %f", thumbnail.size.width, thumbnail.size.height);
+    UIImage* thumbnail = [UIImage imageWithCGImage:imageRef];
+    UIImage *newImage = resizeToRequested(thumbnail, requestedWidth, requestedHeight);
     CGImageRelease(imageRef);
     
-    generateThumbnail(thumbnail, format, thumbnailDir, resolve, reject);
+    generateThumbnail(newImage, format, thumbnailDir, resolve, reject);
+}
+
+static UIImage* resizeToRequested(UIImage* image, NSUInteger requestedWidth, NSUInteger requestedHeight) {
+    CGFloat scaleFloat = 1.0;
+    CGFloat imageWidth = image.size.width;
+    CGFloat imageHeight = image.size.height;
+    if (imageWidth < imageHeight) {
+        scaleFloat = imageWidth / requestedWidth;
+    }
+    else if (imageHeight < imageWidth) {
+        scaleFloat = imageHeight / requestedHeight;
+    }
+    else {
+        scaleFloat = imageWidth / requestedWidth;
+    }
+    NSLog(@"[createVideoThumbnail] scaleFloat %f", scaleFloat);
+    CGRect rect = CGRectMake(0, 0, imageWidth / scaleFloat, imageHeight / scaleFloat);
+    
+    UIGraphicsBeginImageContextWithOptions(rect.size, NO, 1.0);
+    [image drawInRect:CGRectMake(0, 0, rect.size.width, rect.size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
 }
 
 static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
