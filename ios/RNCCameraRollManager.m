@@ -98,6 +98,7 @@ static NSString *const kErrorUnableToLoad = @"E_UNABLE_TO_LOAD";
 
 static NSString *const kErrorAuthRestricted = @"E_PHOTO_LIBRARY_AUTH_RESTRICTED";
 static NSString *const kErrorAuthDenied = @"E_PHOTO_LIBRARY_AUTH_DENIED";
+static NSString *const kErrorUnsupportedUrl = @"E_UNSUPPORTED_URL";
 
 static NSString *const kErrorFileDoesntExist = @"E_FILE_DOESNT_EXIST";
 
@@ -640,7 +641,14 @@ RCT_EXPORT_METHOD(getThumbnail:(NSString *)url params:(NSDictionary *)params res
   NSString *const format = [params objectForKey:@"format"] ? [RCTConvert NSString:params[@"format"]] : @"jpeg";
   NSUInteger const timestamp = [params objectForKey:@"timestamp"] ? [RCTConvert NSInteger:params[@"timestamp"]] : 0;
   NSString *const assetType = [params objectForKey:@"assetType"] ? [RCTConvert NSString:params[@"assetType"]] : nil;
-  
+    
+  NSLog(@"getThumbnail - params %@", params);
+  NSLog(@"getThumbnail - url %@", url);
+  NSLog(@"getThumbnail - req width %lu", width);
+  NSLog(@"getThumbnail - req height %lu", height);
+  NSLog(@"getThumbnail - format %@", format);
+  NSLog(@"getThumbnail - timestamp %lu", timestamp);
+  NSLog(@"getThumbnail - assetType %@", assetType);
   
   NSString* tempThumbDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
   tempThumbDirectory = [tempThumbDirectory stringByAppendingString:@"/thumbnails/"];
@@ -703,6 +711,9 @@ static void showSquareImageForAsset(PHAsset* asset, NSString* format, NSUInteger
         // adjusted accordingly
         targetSize = CGSizeMake( (assetWidth * requestedHeight) / assetHeight, requestedHeight);
     }
+    else {
+        targetSize = CGSizeMake( (assetWidth * requestedHeight) / assetHeight, (assetHeight * requestedWidth) / assetWidth);
+    }
     
     PHImageRequestOptions *cropOptions = [[PHImageRequestOptions alloc] init];
     cropOptions.resizeMode = PHImageRequestOptionsResizeModeExact;
@@ -728,16 +739,93 @@ static void showSquareImageForAsset(PHAsset* asset, NSString* format, NSUInteger
     }];
 }
 
+static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger height, NSString* format, NSString* thumbnailDir, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+  NSString* videoThumbnailDir = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Videos]];
+  [[NSFileManager defaultManager] createDirectoryAtPath:videoThumbnailDir withIntermediateDirectories:YES attributes:nil error:nil];
+    
+  NSURL* url = [NSURL URLWithString:uri];
+  PHFetchResult* fetchResult = nil;
+  if ([url.scheme isEqualToString:@"ph"]) {
+      fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[[uri substringFromIndex: 5]] options:nil];
+  } else {
+      fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
+  }
+    
+  PHAsset* asset = [fetchResult firstObject];
+  if (asset) {
+    PHVideoRequestOptions *videoOptions = [PHVideoRequestOptions new];
+    videoOptions.networkAccessAllowed = YES;
+    videoOptions.deliveryMode = PHVideoRequestOptionsDeliveryModeHighQualityFormat;
+      
+    [[PHImageManager defaultManager]
+     requestAVAssetForVideo:asset options:videoOptions resultHandler:^(AVAsset* asset,
+                                                                       AVAudioMix * audioMix, NSDictionary* info) {
+        AVURLAsset* videoAsset = (AVURLAsset*)asset;
+        @try {
+          generateVideoThumbImage(videoAsset, timestamp, width, height, videoThumbnailDir, format, resolve, reject);
+        } @catch (NSException *exception) {
+            reject(exception.name, exception.reason, nil);
+        }
+    }];
+  }
+  else {
+      resolve(nil);
+  }
+}
+
+static void generateVideoThumbImage(AVURLAsset* asset, NSUInteger timeStamp, NSUInteger requestedWidth, NSUInteger requestedHeight, NSString* thumbnailDir, NSString* format, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+    AVAssetImageGenerator *generator = [ [AVAssetImageGenerator alloc] initWithAsset:asset ];
+    generator.appliesPreferredTrackTransform = YES;
+    CMTime time = [asset duration];
+    time.value = time.timescale * timeStamp / 1000;
+    CMTime actTime = CMTimeMake(0, 0);
+    NSError *err = NULL;
+    CGImageRef imageRef = [generator copyCGImageAtTime:time actualTime:&actTime error:&err];
+    if (err) {
+        NSLog(@"[createVideoThumbnail] GENERATE THUMBNAIL ERROR %@", err);
+        NSException *e = [NSException
+            exceptionWithName:kErrorUnsupportedUrl
+            reason:@"File doesn't exist or not supported"
+            userInfo:nil];
+        @throw e;
+    }
+    
+    CGFloat scaleFloat = 1.0;
+    NSUInteger imageWidth = CGImageGetWidth(imageRef);
+    NSUInteger imageHeight = CGImageGetHeight(imageRef);
+    
+    if (imageWidth < imageHeight) {
+        scaleFloat = ((float) imageWidth) / requestedWidth;
+    }
+    else if (imageHeight < imageWidth) {
+        scaleFloat = ((float) imageHeight) / requestedHeight;
+    }
+    else {
+        scaleFloat = ((float) imageWidth) / requestedWidth;
+    }
+    NSLog(@"[createVideoThumbnail] scaleFloat %f", scaleFloat);
+
+    UIImage *thumbnail = [UIImage imageWithCGImage:imageRef scale:scaleFloat orientation:UIImageOrientationUp];
+    NSLog(@"[createVideoThumbnail] generateVideoThumbImage width %f height %f", thumbnail.size.width, thumbnail.size.height);
+    CGImageRelease(imageRef);
+    
+    generateThumbnail(thumbnail, format, thumbnailDir, resolve, reject);
+}
+
 static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* thumbnailDir, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-    NSLog(@"[createPhotoThumbnail] generating thumbnail file");
+    NSLog(@"[createPhotoThumbnail] generating thumbnail file %@", thumbnail);
+    NSLog(@"[createPhotoThumbnail] generating thumbnail file with size %f %f", thumbnail.size.width, thumbnail.size.height);
     NSData *data = nil;
     NSString *fullPath = nil;
+    
+    NSLog(@"[createPhotoThumbnail] generating thumbnail file %@", thumbnail);
   
     if ([format isEqual: @"png"]) {
         data = UIImagePNGRepresentation(thumbnail);
         fullPath = [thumbnailDir stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.png",[[NSProcessInfo processInfo] globallyUniqueString]]];
     } else {
         data = UIImageJPEGRepresentation(thumbnail, 1.0);
+        NSLog(@"data %@", data);
         fullPath = [thumbnailDir stringByAppendingPathComponent: [NSString stringWithFormat:@"thumb-%@.jpeg",[[NSProcessInfo processInfo] globallyUniqueString]]];
     }
   
@@ -748,12 +836,6 @@ static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* th
         @"width"    : [NSNumber numberWithFloat: thumbnail.size.width],
         @"height"   : [NSNumber numberWithFloat: thumbnail.size.height]
     });
-}
-
-static void createVideoThumbnail(NSString* url, NSUInteger width, NSUInteger height, NSString* format, NSString* thumbnailDir, NSUInteger timestamp, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-  NSString* videoThumbnailDir = [thumbnailDir stringByAppendingString:[@"/" stringByAppendingString: kMedia_Videos]];
-  
-  resolve(nil);
 }
 
 static void checkPhotoLibraryConfig()
