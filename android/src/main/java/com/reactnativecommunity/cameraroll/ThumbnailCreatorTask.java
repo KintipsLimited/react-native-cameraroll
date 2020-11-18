@@ -34,7 +34,8 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private static final String THUMBNAILS_FOLDER = "/thumbnails";
 
     private static final String ERROR_UNABLE_TO_GENERATE_THUMBNAIL = "E_UNABLE_TO_GENERATE_THUMBNAIL";
-    private static final String ERROR_UNABLE_TO_DECODE_FILE = "E_UNABLE_TO_DECODE_FILE";
+    private static final String ERROR_FILE_DOES_NOT_EXIST = "E_FILE_DOES_NOT_EXIST";
+    private static final String ERROR_UNSUPPORTED_URL = "E_UNSUPPORTED_URL";
 
     private final String uri;
     private final int width;
@@ -62,6 +63,11 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     }
 
     private void createThumbnail() {
+        if (URLUtil.isNetworkUrl(uri)) {
+            promise.reject(ERROR_UNSUPPORTED_URL, "Cannot support remote photos and videos");
+            return;
+        }
+
         String thumbnailFolder = reactContext.getApplicationContext().getCacheDir().getAbsolutePath() + THUMBNAILS_FOLDER;
         Log.d("RNCameraRoll", "Thumbnail folder: " + thumbnailFolder);
         try {
@@ -115,7 +121,14 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putDouble("height", sampledImage.getHeight());
 
             promise.resolve(map);
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
+            promise.reject(ERROR_FILE_DOES_NOT_EXIST, "File not found.");
+        }
+        catch (IOException e) {
+            promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, "There was an issue in saving the file.");
+        }
+        catch (Exception e) {
+            Log.d("RNCameraRoll", e.toString());
             promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, e);
         }
     }
@@ -165,6 +178,12 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
             promise.resolve(map);
 
+        }
+        catch (FileNotFoundException e) {
+            promise.reject(ERROR_FILE_DOES_NOT_EXIST, "File not found.");
+        }
+        catch (IOException e) {
+            promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, "There was an issue in saving the file.");
         }
         catch (Exception e) {
             Log.d("RNCameraRoll", e.toString());
