@@ -678,7 +678,6 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
       fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[[uri substringFromIndex: 5]] options:nil];
   } else if ([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) {
       reject(kErrorUnsupportedUrl, @"Cannot support remote photos", nil);
-      return;
   } else {
       fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
   }
@@ -752,7 +751,6 @@ static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger hei
       fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[[uri substringFromIndex: 5]] options:nil];
   } else if ([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) {
       reject(kErrorUnsupportedUrl, @"Cannot support remote videos", nil);
-      return;
   } else {
       fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
   }
@@ -808,17 +806,20 @@ static UIImage* resizeToRequested(UIImage* image, NSUInteger requestedWidth, NSU
     CGFloat scaleFloat = 1.0;
     CGFloat imageWidth = image.size.width;
     CGFloat imageHeight = image.size.height;
+    CGRect rect = CGRectMake(0, 0, imageWidth, imageHeight);
     if (imageWidth < imageHeight) {
-        scaleFloat = imageWidth / requestedWidth;
+        scaleFloat = requestedWidth / imageWidth;
+        rect = CGRectMake(0, 0, requestedWidth, imageHeight * scaleFloat);
     }
     else if (imageHeight < imageWidth) {
-        scaleFloat = imageHeight / requestedHeight;
+        scaleFloat = requestedHeight / imageHeight;
+        rect = CGRectMake(0, 0, imageWidth * scaleFloat, requestedHeight);
     }
     else {
         scaleFloat = imageWidth / requestedWidth;
+        rect = CGRectMake(0, 0, requestedWidth, imageHeight * scaleFloat);
     }
     NSLog(@"[createVideoThumbnail] scaleFloat %f", scaleFloat);
-    CGRect rect = CGRectMake(0, 0, imageWidth / scaleFloat, imageHeight / scaleFloat);
     
     UIGraphicsBeginImageContextWithOptions(rect.size, NO, 1.0);
     [image drawInRect:CGRectMake(0, 0, rect.size.width, rect.size.height)];
