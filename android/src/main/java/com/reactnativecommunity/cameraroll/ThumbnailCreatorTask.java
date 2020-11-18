@@ -64,7 +64,11 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
     private void createThumbnail() {
         if (URLUtil.isNetworkUrl(uri)) {
-            promise.reject(ERROR_UNSUPPORTED_URL, "Cannot support remote photos and videos");
+            if (assetType.equalsIgnoreCase(MEDIA_PHOTO)) {
+                promise.reject(ERROR_UNSUPPORTED_URL, "Cannot support remote photos");
+            } else if (assetType.equalsIgnoreCase(MEDIA_VIDEO)) {
+                promise.reject(ERROR_UNSUPPORTED_URL, "Cannot support remote videos");
+            }
             return;
         }
 
