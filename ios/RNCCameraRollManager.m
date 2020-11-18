@@ -676,6 +676,9 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
   NSURL* url = [NSURL URLWithString:uri];
   if ([url.scheme isEqualToString:@"ph"]) {
       fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[[uri substringFromIndex: 5]] options:nil];
+  } else if ([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) {
+      reject(kErrorUnsupportedUrl, @"Cannot support remote photos", nil);
+      return;
   } else {
       fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
   }
@@ -747,6 +750,9 @@ static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger hei
   PHFetchResult* fetchResult = nil;
   if ([url.scheme isEqualToString:@"ph"]) {
       fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[[uri substringFromIndex: 5]] options:nil];
+  } else if ([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) {
+      reject(kErrorUnsupportedUrl, @"Cannot support remote videos", nil);
+      return;
   } else {
       fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
   }
