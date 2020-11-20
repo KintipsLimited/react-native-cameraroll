@@ -117,16 +117,19 @@ export type Album = {
   count: number,
 }
 
+export type ThumbnailOutputType = "base64" | "filepath";
+
 export type GetThumbnailParams = {
   format?: "jpeg" | "png",
   timestamp?: number, /** for video only */
   width: number,
   height: number,
-  assetType: "Photos" | "Videos"
+  assetType: "Photos" | "Videos",
+  outputType: ThumbnailOutputType
 }
 
 export type Thumbnail = {
-  url : string,
+  data : string,
   width: number,
   height: number
 }

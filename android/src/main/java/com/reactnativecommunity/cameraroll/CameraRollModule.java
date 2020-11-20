@@ -757,8 +757,9 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     String format = params.hasKey("format") ? params.getString("format") : null;
     int timestamp = params.hasKey("timestamp") ? params.getInt("timestamp") : 0;
     String assetType = params.hasKey("assetType") ? params.getString("assetType") : null;
+    String outputType = params.hasKey("outputType") ? params.getString("outputType") : "filepath";
     Log.d("RNCameraRoll", "Creating thumbnail from " + uri + " with the following params: " + params.toString());
 
-    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, promise).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, outputType, promise).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
   }
 }

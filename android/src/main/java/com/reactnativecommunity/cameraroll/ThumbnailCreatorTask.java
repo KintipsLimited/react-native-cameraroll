@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.URLUtil;
 
@@ -15,6 +16,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableMap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -33,6 +35,9 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private static final String PNG_MIME_TYPE = "image/png";
     private static final String THUMBNAILS_FOLDER = "/thumbnails";
 
+    private static final String FILEPATH_OUTPUT_TYPE = "filepath";
+    private static final String BASE64_OUTPUT_TYPE = "base64";
+
     private static final String ERROR_UNABLE_TO_GENERATE_THUMBNAIL = "E_UNABLE_TO_GENERATE_THUMBNAIL";
     private static final String ERROR_FILE_DOES_NOT_EXIST = "E_FILE_DOES_NOT_EXIST";
     private static final String ERROR_UNSUPPORTED_URL = "E_UNSUPPORTED_URL";
@@ -43,9 +48,10 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private final String format;
     private final int timestamp;
     private final String assetType;
+    private final String outputType;
     private final Promise promise;
 
-    public ThumbnailCreatorTask(ReactApplicationContext reactContext, String uri, int width, int height, String format, int timestamp, String assetType, Promise promise) {
+    public ThumbnailCreatorTask(ReactApplicationContext reactContext, String uri, int width, int height, String format, int timestamp, String assetType, String outputType, Promise promise) {
         super(reactContext);
         this.reactContext = reactContext;
         this.uri = uri;
@@ -54,6 +60,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         this.format = format;
         this.timestamp = timestamp;
         this.assetType = assetType;
+        this.outputType = outputType;
         this.promise = promise;
     }
 
@@ -95,8 +102,6 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     }
 
     private void createVideoThumbnail(File thumbnailDir, String thumbnailFolder) {
-        OutputStream fOut = null;
-
         try {
             Bitmap image = getBitmapAtTime(uri, timestamp);
             BitmapFactory.Options options = new BitmapFactory.Options();
@@ -104,27 +109,34 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             options.inJustDecodeBounds = false;
             Bitmap sampledImage = scaleAndCropBitmap(image, width, height);
             String forVideoFormat = format != null ? format : "jpeg";
-            String filename = generateThumbnailFilename(forVideoFormat, options);
+            String data = "";
 
-            File imageFile = new File(thumbnailDir, filename);
-            imageFile.createNewFile();
-            fOut = new FileOutputStream(imageFile);
-
-            if (PNG_EXT.equals(format)) {
-                sampledImage.compress(Bitmap.CompressFormat.PNG, 100, fOut);
-            } else {
-                sampledImage.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+            if (FILEPATH_OUTPUT_TYPE.equals(outputType)) {
+                String filename = generateThumbnailFilename(format, options);
+                File imageFile = new File(thumbnailDir, filename);
+                imageFile.createNewFile();
+                OutputStream fOut = new FileOutputStream(imageFile);
+                compressImage(sampledImage, options, fOut, forVideoFormat);
+                fOut.flush();
+                fOut.close();
+                data = "file://" + thumbnailFolder + "/" + filename;
+            }
+            else if (BASE64_OUTPUT_TYPE.equals(outputType)) {
+                ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+                compressImage(sampledImage, options, bOut, forVideoFormat);
+                bOut.flush();
+                bOut.close();
+                data = Base64.encodeToString(bOut.toByteArray(), Base64.DEFAULT);
             }
 
-            fOut.flush();
-            fOut.close();
-
             WritableMap map = Arguments.createMap();
-            map.putString("url", "file://" + thumbnailFolder + "/" + filename);
+            map.putString("data", data);
             map.putDouble("width", sampledImage.getWidth());
             map.putDouble("height", sampledImage.getHeight());
 
             promise.resolve(map);
+
+            sampledImage.recycle();
         } catch (FileNotFoundException e) {
             promise.reject(ERROR_FILE_DOES_NOT_EXIST, "File not found.");
         }
@@ -154,34 +166,38 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     }
 
     private void createPhotoThumbnail(File thumbnailDir, String thumbnailFolder) {
-        OutputStream fOut = null;
-
         try {
             SampledBitmap decodedSample = decodeSampledBitmapFromFile(uri, width, height);
             Log.d("RNCameraRoll", "Bitmap created with width: " + decodedSample.bitmap.getWidth() + " height: " + decodedSample.bitmap.getHeight());
             Bitmap bitmap = scaleAndCropBitmap(decodedSample.bitmap, width, height);
             BitmapFactory.Options options = decodedSample.options;
-            String filename = generateThumbnailFilename(format, options);
-            File imageFile = new File(thumbnailDir, filename);
-            imageFile.createNewFile();
-            fOut = new FileOutputStream(imageFile);
-
-            // 100 means no compression, the lower you go the stronger the compression
-            Log.d("RNCameraRoll", "Compressing image");
-            compressImage(bitmap, options, fOut, format);
-            Log.d("RNCameraRoll", "Image compressed");
-
-            fOut.flush();
-            fOut.close();
+            String data = "";
+            if (FILEPATH_OUTPUT_TYPE.equals(outputType)) {
+                String filename = generateThumbnailFilename(format, options);
+                File imageFile = new File(thumbnailDir, filename);
+                imageFile.createNewFile();
+                OutputStream fOut = new FileOutputStream(imageFile);
+                compressImage(bitmap, options, fOut, format);
+                fOut.flush();
+                fOut.close();
+                data = "file://" + thumbnailFolder + "/" + filename;
+            }
+            else if (BASE64_OUTPUT_TYPE.equals(outputType)) {
+                ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+                compressImage(bitmap, options, bOut, format);
+                bOut.flush();
+                bOut.close();
+                data = Base64.encodeToString(bOut.toByteArray(), Base64.DEFAULT);
+            }
 
             WritableMap map = Arguments.createMap();
-            map.putString("url", "file://" + thumbnailFolder + "/" + filename);
+            map.putString("data", data);
             map.putDouble("width", bitmap.getWidth());
             map.putDouble("height", bitmap.getHeight());
             Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("url"));
 
             promise.resolve(map);
-
+            bitmap.recycle();
         }
         catch (FileNotFoundException e) {
             promise.reject(ERROR_FILE_DOES_NOT_EXIST, "File not found.");
