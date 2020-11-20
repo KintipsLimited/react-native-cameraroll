@@ -41,6 +41,8 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private static final String ERROR_UNABLE_TO_GENERATE_THUMBNAIL = "E_UNABLE_TO_GENERATE_THUMBNAIL";
     private static final String ERROR_FILE_DOES_NOT_EXIST = "E_FILE_DOES_NOT_EXIST";
     private static final String ERROR_UNSUPPORTED_URL = "E_UNSUPPORTED_URL";
+    private static final String PNG_BASE64_PREFIX = "data:image/png;base64,";
+    private static final String JPEG_BASE64_PREFIX = "data:image/jpeg;base64,";
 
     private final String uri;
     private final int width;
@@ -126,7 +128,10 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
                 compressImage(sampledImage, options, bOut, forVideoFormat);
                 bOut.flush();
                 bOut.close();
-                data = Base64.encodeToString(bOut.toByteArray(), Base64.DEFAULT);
+                StringBuilder b64building = new StringBuilder();
+                b64building.append(getBase64Prefix(options, format));
+                b64building.append(Base64.encodeToString(bOut.toByteArray(), Base64.DEFAULT));
+                data = b64building.toString();
             }
 
             WritableMap map = Arguments.createMap();
@@ -188,7 +193,10 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
                 compressImage(bitmap, options, bOut, format);
                 bOut.flush();
                 bOut.close();
-                data = Base64.encodeToString(bOut.toByteArray(), Base64.DEFAULT);
+                StringBuilder b64building = new StringBuilder();
+                b64building.append(getBase64Prefix(options, format));
+                b64building.append(Base64.encodeToString(bOut.toByteArray(), Base64.DEFAULT));
+                data = b64building.toString();
             }
 
             WritableMap map = Arguments.createMap();
@@ -269,6 +277,23 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             }
             else {
                 image.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            }
+        }
+    }
+
+    private String getBase64Prefix(BitmapFactory.Options options, String format) {
+        if (format != null && PNG_EXT.equals(format)) {
+            return PNG_BASE64_PREFIX;
+        }
+        else if (format != null) {
+            return JPEG_BASE64_PREFIX;
+        }
+        else {
+            if (PNG_MIME_TYPE.equals(options.outMimeType)) {
+                return PNG_BASE64_PREFIX;
+            }
+            else {
+                return JPEG_BASE64_PREFIX;
             }
         }
     }
