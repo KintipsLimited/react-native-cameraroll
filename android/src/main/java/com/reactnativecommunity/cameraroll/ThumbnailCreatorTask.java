@@ -30,8 +30,8 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private static final String MEDIA_PHOTO = "photos";
     private static final String MEDIA_VIDEO = "videos";
 
-    private static final String JPEG_EXT = "jpeg";
-    private static final String PNG_EXT = "png";
+    public static final String JPEG_EXT = "jpeg";
+    public static final String PNG_EXT = "png";
     private static final String PNG_MIME_TYPE = "image/png";
     private static final String THUMBNAILS_FOLDER = "/thumbnails";
 
@@ -259,7 +259,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         }
         // This will use the mime type of the file if there is no format specified.
         else {
-            fileName += PNG_MIME_TYPE.equals(options.outMimeType) ? PNG_EXT : JPEG_EXT;
+            fileName += JPEG_EXT;
         }
         return fileName;
     }
@@ -268,16 +268,8 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         if (format != null && PNG_EXT.equals(format)) {
             image.compress(Bitmap.CompressFormat.PNG, 100, out);
         }
-        else if (format != null) {
-            image.compress(Bitmap.CompressFormat.JPEG, 90, out);
-        }
         else {
-            if (PNG_MIME_TYPE.equals(options.outMimeType)) {
-                image.compress(Bitmap.CompressFormat.PNG, 100, out);
-            }
-            else {
-                image.compress(Bitmap.CompressFormat.JPEG, 90, out);
-            }
+            image.compress(Bitmap.CompressFormat.JPEG, 90, out);
         }
     }
 
@@ -288,14 +280,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         else if (format != null) {
             return JPEG_BASE64_PREFIX;
         }
-        else {
-            if (PNG_MIME_TYPE.equals(options.outMimeType)) {
-                return PNG_BASE64_PREFIX;
-            }
-            else {
-                return JPEG_BASE64_PREFIX;
-            }
-        }
+        return JPEG_BASE64_PREFIX;
     }
 
     /*

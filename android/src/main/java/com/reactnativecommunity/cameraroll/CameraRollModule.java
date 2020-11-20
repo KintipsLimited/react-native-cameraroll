@@ -754,7 +754,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
   public void getThumbnail(String uri, ReadableMap params, Promise promise) {
     int width = params.hasKey("width") ? params.getInt("width") : 0;
     int height = params.hasKey("height") ? params.getInt("height") : 0;
-    String format = params.hasKey("format") ? params.getString("format") : null;
+    String format = params.hasKey("format") ? params.getString("format") : ThumbnailCreatorTask.JPEG_EXT;
     int timestamp = params.hasKey("timestamp") ? params.getInt("timestamp") : 0;
     String assetType = params.hasKey("assetType") ? params.getString("assetType") : null;
     String outputType = params.hasKey("outputType") ? params.getString("outputType") : "filepath";
