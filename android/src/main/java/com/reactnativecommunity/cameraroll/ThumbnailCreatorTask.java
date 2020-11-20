@@ -133,6 +133,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("data", data);
             map.putDouble("width", sampledImage.getWidth());
             map.putDouble("height", sampledImage.getHeight());
+            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("data"));
 
             promise.resolve(map);
 
@@ -194,7 +195,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("data", data);
             map.putDouble("width", bitmap.getWidth());
             map.putDouble("height", bitmap.getHeight());
-            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("url"));
+            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("data"));
 
             promise.resolve(map);
             bitmap.recycle();
