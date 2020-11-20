@@ -118,8 +118,8 @@ export type Album = {
 }
 
 export type GetThumbnailParams = {
-  format: "jpeg" | "png",
-  timestamp: number, /** for video only */
+  format?: "jpeg" | "png",
+  timestamp?: number, /** for video only */
   width: number,
   height: number,
   assetType: "Photos" | "Videos"

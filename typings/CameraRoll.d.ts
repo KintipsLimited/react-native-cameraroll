@@ -79,9 +79,9 @@ declare namespace CameraRoll {
     photoPath: string,
   };
 
-  type GetThumbnailParams = {
-    format: "jpeg" | "png",
-    timestamp: number, /** for video only */
+  export type GetThumbnailParams = {
+    format?: "jpeg" | "png",
+    timestamp?: number, /** for video only */
     width: number,
     height: number,
     assetType: "Photos" | "Videos"
