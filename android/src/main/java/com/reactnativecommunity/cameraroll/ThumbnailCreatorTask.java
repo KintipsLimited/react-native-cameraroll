@@ -143,14 +143,18 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             promise.resolve(map);
 
             sampledImage.recycle();
-        } catch (FileNotFoundException e) {
+        }
+        catch (IllegalStateException e) {
+            promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, e.getMessage());
+        }
+        catch (FileNotFoundException e) {
             promise.reject(ERROR_FILE_DOES_NOT_EXIST, "File not found.");
         }
         catch (IOException e) {
             promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, "There was an issue in saving the file.");
         }
         catch (Exception e) {
-            Log.d("RNCameraRoll", e.toString());
+            Log.d("RNCameraRoll", e.getMessage());
             promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, e);
         }
     }
@@ -174,6 +178,12 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     private void createPhotoThumbnail(File thumbnailDir, String thumbnailFolder) {
         try {
             SampledBitmap decodedSample = decodeSampledBitmapFromFile(uri, width, height);
+            if (decodedSample.bitmap == null) {
+                Log.d("RNCameraRoll", "Unable to generate thumbnail with the url specified");
+                promise.reject(ERROR_UNABLE_TO_GENERATE_THUMBNAIL, "There was an issue in saving the file.");
+                return;
+            }
+
             Log.d("RNCameraRoll", "Bitmap created with width: " + decodedSample.bitmap.getWidth() + " height: " + decodedSample.bitmap.getHeight());
             Bitmap bitmap = scaleAndCropBitmap(decodedSample.bitmap, width, height);
             BitmapFactory.Options options = decodedSample.options;
@@ -332,7 +342,6 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         SampledBitmap(Bitmap bitmap, BitmapFactory.Options options) {
             this.bitmap = bitmap;
             this.options = options;
-            Log.d("RNCameraRoll", "Bitmap created with the following: " + bitmap.toString() + " options: " + options.toString());
         }
     }
 }
