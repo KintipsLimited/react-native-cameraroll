@@ -81,10 +81,16 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             return;
         }
 
+        if (!checkIfFileExists(uri)) {
+            Log.d("RNCameraRoll", "File doesn't exist so null is returned.");
+            promise.resolve(null);
+            return;
+        }
+
         String thumbnailFolder = reactContext.getApplicationContext().getCacheDir().getAbsolutePath() + THUMBNAILS_FOLDER;
         Log.d("RNCameraRoll", "Thumbnail folder: " + thumbnailFolder);
         try {
-            File thumbnailDir = createDirIfNotExists(thumbnailFolder);
+//            File thumbnailDir = createDirIfNotExists(thumbnailFolder);
             if (assetType.equalsIgnoreCase(MEDIA_PHOTO)) {
                 String photoFolder = thumbnailFolder + "/" + MEDIA_PHOTO;
                 File photoDir = createDirIfNotExists(photoFolder);
@@ -247,6 +253,14 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         return new SampledBitmap(BitmapFactory.decodeFile(fileUri, options), options);
     }
 
+    private String removeFileUrlPrefix(String uri) {
+        String fileUri = uri;
+        if (URLUtil.isFileUrl(uri)) {
+            fileUri = Uri.decode(uri).replace("file://", "");
+        }
+        return fileUri;
+    }
+
     private int calculateInSampleSize(final int bitmapWidth, final int bitmapHeight, int requestedWidth, int requestedHeight) {
         int inSampleSize = 1;
 
@@ -316,6 +330,15 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
         return scaledDown;
+    }
+
+    private boolean checkIfFileExists(String path) {
+        String newPath = removeFileUrlPrefix(path);
+        File media = new File(newPath);
+        if (media.exists()) {
+            return true;
+        }
+        return false;
     }
 
     private File createDirIfNotExists(String path) {

@@ -687,7 +687,8 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
       showSquareImageForAsset(asset, format, requestWidth, requestedHeight, photoThumbnailDir, outputType, resolve, reject);
   }
   else {
-      reject(kErrorFileDoesntExist, @"Unable to find file.", nil);
+    resolve(nil);
+    //reject(kErrorFileDoesntExist, @"Unable to find file.", nil);
   }
 }
 
