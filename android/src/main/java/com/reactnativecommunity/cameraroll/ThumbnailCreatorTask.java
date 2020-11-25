@@ -82,8 +82,8 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         }
 
         if (!checkIfFileExists(uri)) {
-            Log.d("RNCameraRoll", "File doesn't exist so null is returned.");
-            promise.resolve(null);
+//            Log.d("RNCameraRoll", "File doesn't exist so null is returned.");
+            promise.reject(ERROR_FILE_DOES_NOT_EXIST, "File doesn't exist");
             return;
         }
 

@@ -687,8 +687,8 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
       showSquareImageForAsset(asset, format, requestWidth, requestedHeight, photoThumbnailDir, outputType, resolve, reject);
   }
   else {
-    resolve(nil);
-    //reject(kErrorFileDoesntExist, @"Unable to find file.", nil);
+    // resolve(nil);
+    reject(kErrorFileDoesntExist, @"File doesn't exist", nil);
   }
 }
 
@@ -770,6 +770,7 @@ static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger hei
     }];
   }
   else {
+      reject(kErrorFileDoesntExist, @"File doesn't exist", nil);
       resolve(nil);
   }
 }
