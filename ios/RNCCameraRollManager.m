@@ -771,7 +771,7 @@ static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger hei
   }
   else {
       reject(kErrorFileDoesntExist, @"File doesn't exist", nil);
-      resolve(nil);
+      // resolve(nil);
   }
 }
 
