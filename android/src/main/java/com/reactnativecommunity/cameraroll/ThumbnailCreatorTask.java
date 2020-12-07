@@ -2,7 +2,9 @@ package com.reactnativecommunity.cameraroll;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Base64;
@@ -318,6 +320,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
         float scaleRatio = 1;
+
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = ((float) requestedWidth) / bitmapWidth;
             resultHeight = (int) (bitmapHeight * scaleRatio);
@@ -327,9 +330,22 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             scaleRatio = ((float) requestedHeight) / bitmapHeight;
             resultWidth = (int) (bitmapWidth * scaleRatio);
         }
-        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
-        return scaledDown;
+
+        float middleX = resultWidth / 2.0f;
+        float middleY = resultHeight / 2.0f;
+
+        Bitmap scaledBitmap = Bitmap.createBitmap(resultWidth, resultHeight, Bitmap.Config.ARGB_8888);
+        Matrix scaleMatrix = new Matrix();
+        scaleMatrix.setScale(scaleRatio, scaleRatio, middleX, middleY);
+
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(image, middleX - image.getWidth() / 2, middleY - image.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+//        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
+
+        return scaledBitmap;
     }
 
     private boolean checkIfFileExists(String path) {
