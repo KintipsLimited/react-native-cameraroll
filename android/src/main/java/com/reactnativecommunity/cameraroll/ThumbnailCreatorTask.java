@@ -341,11 +341,11 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         Canvas canvas = new Canvas(scaledBitmap);
         canvas.setMatrix(scaleMatrix);
-        canvas.drawBitmap(image, middleX - image.getWidth() / 2, middleY - image.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+        canvas.drawBitmap(image, 0, middleY - 0, new Paint(Paint.FILTER_BITMAP_FLAG));
 
-//        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
+        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
 
-        return scaledBitmap;
+        return scaledDown;
     }
 
     private boolean checkIfFileExists(String path) {
