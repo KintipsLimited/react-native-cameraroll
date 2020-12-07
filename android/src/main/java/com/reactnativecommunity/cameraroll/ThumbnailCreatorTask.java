@@ -327,7 +327,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             scaleRatio = ((float) requestedHeight) / bitmapHeight;
             resultWidth = (int) (bitmapWidth * scaleRatio);
         }
-        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
+        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
 
         return scaledDown;
     }
