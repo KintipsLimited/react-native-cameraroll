@@ -144,7 +144,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("data", data);
             map.putDouble("width", sampledImage.getWidth());
             map.putDouble("height", sampledImage.getHeight());
-            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("data"));
+            Log.d("RNCameraRoll", "Thumbnail creation finished");
 
             promise.resolve(map);
 
