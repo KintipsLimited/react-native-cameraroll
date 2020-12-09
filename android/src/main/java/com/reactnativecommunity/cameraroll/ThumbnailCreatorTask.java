@@ -2,7 +2,9 @@ package com.reactnativecommunity.cameraroll;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Base64;
@@ -313,25 +315,31 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     * If the height of original bitmap is smaller, the bitmap is scaled down to requestedHeight and requestedWidth is ignored when scaling.
     * */
     private Bitmap scaleAndCropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
-        return image;
+        int bitmapWidth = image.getWidth();
+        int bitmapHeight = image.getHeight();
+        int resultWidth = requestedWidth;
+        int resultHeight = requestedHeight;
+        float scaleRatio = 1;
+        if (bitmapWidth < bitmapHeight) {
+            scaleRatio = ((float) requestedWidth) / bitmapWidth;
+            resultHeight = (int) (bitmapHeight * scaleRatio);
+        }
+        // if height < width, use requestedHeight as reference for scale
+        else if (bitmapHeight < bitmapWidth) {
+            scaleRatio = ((float) requestedHeight) / bitmapHeight;
+            resultWidth = (int) (bitmapWidth * scaleRatio);
+        }
 
-//        int bitmapWidth = image.getWidth();
-//        int bitmapHeight = image.getHeight();
-//        int resultWidth = requestedWidth;
-//        int resultHeight = requestedHeight;
-//        float scaleRatio = 1;
-//        if (bitmapWidth < bitmapHeight) {
-//            scaleRatio = ((float) requestedWidth) / bitmapWidth;
-//            resultHeight = (int) (bitmapHeight * scaleRatio);
-//        }
-//        // if height < width, use requestedHeight as reference for scale
-//        else if (bitmapHeight < bitmapWidth) {
-//            scaleRatio = ((float) requestedHeight) / bitmapHeight;
-//            resultWidth = (int) (bitmapWidth * scaleRatio);
-//        }
+        Matrix scaleMatrix = new Matrix();
+        scaleMatrix.setScale(scaleRatio, scaleRatio, 0, 0);
+
 //        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
-//
-//        return scaledDown;
+        Bitmap scaledDown = Bitmap.createBitmap(resultWidth, resultHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(scaledDown);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+        return scaledDown;
     }
 
     private boolean checkIfFileExists(String path) {
