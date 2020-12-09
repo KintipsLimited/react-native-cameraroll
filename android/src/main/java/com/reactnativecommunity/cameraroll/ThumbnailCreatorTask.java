@@ -219,7 +219,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("data", data);
             map.putDouble("width", bitmap.getWidth());
             map.putDouble("height", bitmap.getHeight());
-            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("data"));
+            Log.d("RNCameraRoll", "Thumbnail creation finished");
 
             promise.resolve(map);
             bitmap.recycle();
@@ -313,23 +313,25 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
     * If the height of original bitmap is smaller, the bitmap is scaled down to requestedHeight and requestedWidth is ignored when scaling.
     * */
     private Bitmap scaleAndCropBitmap(Bitmap image, int requestedWidth, int requestedHeight) {
-        int bitmapWidth = image.getWidth();
-        int bitmapHeight = image.getHeight();
-        int resultWidth = requestedWidth;
-        int resultHeight = requestedHeight;
-        float scaleRatio = 1;
-        if (bitmapWidth < bitmapHeight) {
-            scaleRatio = ((float) requestedWidth) / bitmapWidth;
-            resultHeight = (int) (bitmapHeight * scaleRatio);
-        }
-        // if height < width, use requestedHeight as reference for scale
-        else if (bitmapHeight < bitmapWidth) {
-            scaleRatio = ((float) requestedHeight) / bitmapHeight;
-            resultWidth = (int) (bitmapWidth * scaleRatio);
-        }
-        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
+        return image;
 
-        return scaledDown;
+//        int bitmapWidth = image.getWidth();
+//        int bitmapHeight = image.getHeight();
+//        int resultWidth = requestedWidth;
+//        int resultHeight = requestedHeight;
+//        float scaleRatio = 1;
+//        if (bitmapWidth < bitmapHeight) {
+//            scaleRatio = ((float) requestedWidth) / bitmapWidth;
+//            resultHeight = (int) (bitmapHeight * scaleRatio);
+//        }
+//        // if height < width, use requestedHeight as reference for scale
+//        else if (bitmapHeight < bitmapWidth) {
+//            scaleRatio = ((float) requestedHeight) / bitmapHeight;
+//            resultWidth = (int) (bitmapWidth * scaleRatio);
+//        }
+//        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
+//
+//        return scaledDown;
     }
 
     private boolean checkIfFileExists(String path) {
