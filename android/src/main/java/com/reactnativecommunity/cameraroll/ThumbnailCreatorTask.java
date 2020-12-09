@@ -365,6 +365,10 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         SampledBitmap(Bitmap bitmap, BitmapFactory.Options options) {
             this.bitmap = bitmap;
             this.options = options;
+
+            if (bitmap != null) {
+                Log.d("RNCameraRoll", "Created sampled bitmap with width: " + bitmap.getWidth() + " and height: " + bitmap.getHeight());
+            }
         }
     }
 }
