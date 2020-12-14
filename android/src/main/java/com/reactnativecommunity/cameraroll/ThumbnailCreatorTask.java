@@ -320,6 +320,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
         float scaleRatio = 1;
+
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = ((float) requestedWidth) / bitmapWidth;
             resultHeight = (int) (bitmapHeight * scaleRatio);
@@ -330,15 +331,15 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             resultWidth = (int) (bitmapWidth * scaleRatio);
         }
 
-        Matrix scaleMatrix = new Matrix();
-        scaleMatrix.setScale(scaleRatio, scaleRatio, 0, 0);
-
-        Bitmap scaledDown = Bitmap.createBitmap(image, 0, 0, resultWidth, resultHeight, scaleMatrix, false);
-        Canvas canvas = new Canvas(scaledDown);
-        canvas.setMatrix(scaleMatrix);
-        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
+//        Matrix scaleMatrix = new Matrix();
+//        scaleMatrix.setScale(scaleRatio, scaleRatio, 0, 0);
+//
+//        Bitmap scaledDown = Bitmap.createBitmap(image, 0, 0, resultWidth, resultHeight, scaleMatrix, false);
+//        Canvas canvas = new Canvas(scaledDown);
+//        canvas.setMatrix(scaleMatrix);
+//        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
 //        Bitmap scaledDown = image;
-////        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultW.idth, resultHeight, true);
+        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
         return scaledDown;
     }
 
