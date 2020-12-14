@@ -2,7 +2,9 @@ package com.reactnativecommunity.cameraroll;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Base64;
@@ -144,7 +146,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("data", data);
             map.putDouble("width", sampledImage.getWidth());
             map.putDouble("height", sampledImage.getHeight());
-            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("data"));
+            Log.d("RNCameraRoll", "Thumbnail creation finished");
 
             promise.resolve(map);
 
@@ -219,7 +221,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             map.putString("data", data);
             map.putDouble("width", bitmap.getWidth());
             map.putDouble("height", bitmap.getHeight());
-            Log.d("RNCameraRoll", "Thumbnail creation finished on " + map.getString("data"));
+            Log.d("RNCameraRoll", "Thumbnail creation finished");
 
             promise.resolve(map);
             bitmap.recycle();
@@ -318,6 +320,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         int resultWidth = requestedWidth;
         int resultHeight = requestedHeight;
         float scaleRatio = 1;
+
         if (bitmapWidth < bitmapHeight) {
             scaleRatio = ((float) requestedWidth) / bitmapWidth;
             resultHeight = (int) (bitmapHeight * scaleRatio);
@@ -327,8 +330,16 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             scaleRatio = ((float) requestedHeight) / bitmapHeight;
             resultWidth = (int) (bitmapWidth * scaleRatio);
         }
-        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, false);
 
+//        Matrix scaleMatrix = new Matrix();
+//        scaleMatrix.setScale(scaleRatio, scaleRatio, 0, 0);
+//
+//        Bitmap scaledDown = Bitmap.createBitmap(image, 0, 0, resultWidth, resultHeight, scaleMatrix, false);
+//        Canvas canvas = new Canvas(scaledDown);
+//        canvas.setMatrix(scaleMatrix);
+//        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
+//        Bitmap scaledDown = image;
+        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultWidth, resultHeight, true);
         return scaledDown;
     }
 
@@ -365,6 +376,10 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         SampledBitmap(Bitmap bitmap, BitmapFactory.Options options) {
             this.bitmap = bitmap;
             this.options = options;
+
+            if (bitmap != null) {
+                Log.d("RNCameraRoll", "Created sampled bitmap with width: " + bitmap.getWidth() + " and height: " + bitmap.getHeight());
+            }
         }
     }
 }
