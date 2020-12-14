@@ -333,13 +333,12 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         Matrix scaleMatrix = new Matrix();
         scaleMatrix.setScale(scaleRatio, scaleRatio, 0, 0);
 
-
-//        Bitmap scaledDown = Bitmap.createBitmap(resultWidth, resultHeight, Bitmap.Config.ARGB_8888);
-//        Canvas canvas = new Canvas(scaledDown);
-//        canvas.setMatrix(scaleMatrix);
-//        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
-        Bitmap scaledDown = image;
-//        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultW.idth, resultHeight, true);
+        Bitmap scaledDown = Bitmap.createBitmap(image, 0, 0, resultWidth, resultHeight, scaleMatrix, false);
+        Canvas canvas = new Canvas(scaledDown);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
+//        Bitmap scaledDown = image;
+////        Bitmap scaledDown = Bitmap.createScaledBitmap(image, resultW.idth, resultHeight, true);
         return scaledDown;
     }
 
