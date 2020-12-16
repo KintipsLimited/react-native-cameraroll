@@ -331,6 +331,10 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
             resultWidth = (int) (bitmapWidth * scaleRatio);
         }
 
+        if (bitmapWidth < resultWidth || bitmapHeight < resultHeight) {
+            return image;
+        }
+
         Bitmap scaledDown = Bitmap.createBitmap(resultWidth, resultHeight, Bitmap.Config.ARGB_8888);
 
         float pivotX = 0;
