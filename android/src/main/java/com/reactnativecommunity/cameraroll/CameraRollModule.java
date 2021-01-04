@@ -494,7 +494,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       boolean imageInfoSuccess =
           putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex);
       if (imageInfoSuccess) {
-        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex);
+        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
 
         edge.putMap("node", node);
@@ -515,11 +515,13 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int mimeTypeIndex,
       int groupNameIndex,
       //int dateTakenIndex) {
-      int dateModifiedIndex) {
+      int dateModifiedIndex,
+      int dateTakenIndex) {
     node.putString("type", media.getString(mimeTypeIndex));
     node.putString("group_name", media.getString(groupNameIndex));
     //node.putDouble("timestamp", media.getLong(dateTakenIndex) / 1000d);
     node.putDouble("timestamp", media.getLong(dateModifiedIndex));
+    node.putDouble("creation_date", media.getLong(dateTakenIndex));
   }
 
   private static boolean putImageInfo(

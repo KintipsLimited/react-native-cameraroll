@@ -561,6 +561,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
               @"playableDuration": @([asset duration]) // fractional seconds
           },
           @"timestamp": @(asset.modificationDate.timeIntervalSince1970),
+          @"creation_date": @(asset.creationDate.timeIntervalSince1970),
           @"location": (loc ? @{
               @"latitude": @(loc.coordinate.latitude),
               @"longitude": @(loc.coordinate.longitude),

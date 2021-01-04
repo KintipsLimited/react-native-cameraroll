@@ -82,6 +82,7 @@ export type PhotoIdentifier = {
       playableDuration: number,
     },
     timestamp: number,
+    creation_date: number,
     location?: {
       latitude?: number,
       longitude?: number,
