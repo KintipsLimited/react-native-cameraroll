@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.Intent;
 import java.io.*;
 
+import java.net.URLEncoder;
 import java.util.*;
 
 import com.facebook.common.logging.FLog;
@@ -46,6 +47,10 @@ import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.common.ReactConstants;
 import com.facebook.react.module.annotations.ReactModule;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -653,33 +658,62 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       ContentResolver resolver = mContext.getContentResolver();
 
       // Set up the projection (we only need the ID)
-      String[] projection = { MediaStore.Images.Media._ID };
+// jacky      String[] projection = { MediaStore.Images.Media._ID };
+      String[] projection = { MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.DATA };
+
+      JSONObject jsonRoot = new JSONObject();
+      JSONArray jsonFailedFiles = new JSONArray();
+
+      ArrayList<String> alSelectionArgs = new ArrayList<>();
+      for (int i = 0; i < mUris.size(); i++) {
+        Uri uri = Uri.parse(Uri.encode(mUris.getString(i)));
+        // Uri uri = Uri.parse(mUris.getString(i));
+
+        if (uri.getPath() == null) {
+          jsonFailedFiles.put(mUris.getString(i));
+        } else {
+          alSelectionArgs.add(uri.getPath());
+        }
+      }
 
       // Match on the file path
       String innerWhere = "?";
-      for (int i = 1; i < mUris.size(); i++) {
+      for (int i = 1; i < alSelectionArgs.size(); i++) {
         innerWhere += ", ?";
       }
 
-      String selection = MediaStore.Images.Media.DATA + " IN (" + innerWhere + ")";
+// jacky      String selection = MediaStore.Images.Media.DATA + " IN (" + innerWhere + ")";
+      String selection = MediaStore.Files.FileColumns.DATA + " IN (" + innerWhere + ")";
       // Query for the ID of the media matching the file path
-      Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+// jacky      Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+      Uri queryUri = MediaStore.Files.getContentUri("external");
 
+      /* jacky
       String[] selectionArgs = new String[mUris.size()];
       for (int i = 0; i < mUris.size(); i++) {
-        Uri uri = Uri.parse(mUris.getString(i));
-        selectionArgs[i] = uri.getPath();
-      }
+        Uri uri = Uri.parse(Uri.encode(mUris.getString(i)));
 
-      Cursor cursor = resolver.query(queryUri, projection, selection, selectionArgs, null);
+        if (uri.getPath() == null) {
+          jsonFailedFiles.put(mUris.getString(i));
+        } else {
+          selectionArgs[i] = uri.getPath();
+        }
+      }
+      */
+
+      Cursor cursor = resolver.query(queryUri, projection, selection, alSelectionArgs.toArray(new String[0]), null);
       int deletedCount = 0;
 
       while (cursor.moveToNext()) {
-        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
-        Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+// jacky        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
+        long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID));
+// jacky        Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+        Uri deleteUri = ContentUris.withAppendedId(MediaStore.Files.getContentUri("external"), id);
 
         if (resolver.delete(deleteUri, null, null) == 1) {
           deletedCount++;
+        } else {
+          jsonFailedFiles.put(cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)));
         }
       }
 
@@ -688,8 +722,16 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       if (deletedCount == mUris.size()) {
         mPromise.resolve(true);
       } else {
-        mPromise.reject(ERROR_UNABLE_TO_DELETE,
-            "Could not delete all media, only deleted " + deletedCount + " photos.");
+// jacky        mPromise.reject(ERROR_UNABLE_TO_DELETE,
+//            "Could not delete all media, only deleted " + deletedCount + " photos.");
+        try {
+          jsonRoot.put("failedFiles", jsonFailedFiles);
+          mPromise.reject(ERROR_UNABLE_TO_DELETE, jsonRoot.toString());
+        } catch (JSONException e) {
+          mPromise.reject(ERROR_UNABLE_TO_DELETE, "Could not delete all media, only deleted " + deletedCount + " photos.");
+          e.printStackTrace();
+        }
+
       }
     }
   }
