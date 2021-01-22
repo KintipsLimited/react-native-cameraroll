@@ -106,6 +106,7 @@ export type SaveToCameraRollOptions = {
   album?: Array<string>,
   albumOnly?: boolean,
   photoPath: string,
+  creationTime: number
 };
 
 export type GetAlbumsParams = {
@@ -160,7 +161,7 @@ class CameraRoll {
     tag: string,
     options: SaveToCameraRollOptions = {},
   ): Promise<string> {
-    let {type = 'auto', album = [], albumOnly = false, photoPath=''} = options;
+    let {type = 'auto', album = [], albumOnly = false, photoPath='', creationTime = -1} = options;
     invariant(
       typeof tag === 'string',
       'CameraRoll.saveToCameraRoll must be a valid string.',
@@ -181,6 +182,10 @@ class CameraRoll {
       typeof photoPath === 'string',
       'The forth argument to saveToCameraRoll must be string.',
     );
+    invariant(
+      typeof creationTime === 'number',
+      'The fifth argument to saveToCameraRoll must be number.',
+    );
     if (type === 'auto') {
       if (['mov', 'mp4'].indexOf(tag.split('.').slice(-1)[0]) >= 0) {
         type = 'video';
@@ -191,7 +196,7 @@ class CameraRoll {
     if (albumOnly && photoPath.length > 1) {
       photoPath = photoPath.substring(1);
     }
-    return RNCCameraRoll.saveToCameraRoll(tag, {type, album, albumOnly, photoPath});
+    return RNCCameraRoll.saveToCameraRoll(tag, {type, album, albumOnly, photoPath, creationTime});
   }
   static saveToCameraRoll(
     tag: string,

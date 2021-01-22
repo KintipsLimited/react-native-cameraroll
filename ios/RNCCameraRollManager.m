@@ -226,9 +226,7 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
         }
       } completionHandler:^(BOOL success, NSError *error) {
         if (success) {
-          @try {
-              NSString *result;
-              
+          @try {              
               if ([options[@"albumOnly"] boolValue]) {
                   PHFetchResult* fetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[options[@"photoPath"]] options:nil];
                   NSString * filename = @"";
@@ -240,7 +238,8 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
                       filename = [asset valueForKey:@"filename"];
                       uri = [NSString stringWithFormat:@"ph://%@", [asset localIdentifier]];
                       modifiedDate = [[asset modificationDate] timeIntervalSince1970];
-                      result = [NSString stringWithFormat:@"{\"uri\": \"%@\", \"filename\": \"%@\", \"lastModifiedDate\": %f}", uri, filename, modifiedDate];
+                      NSString *result = [NSString stringWithFormat:@"{\"uri\": \"%@\", \"filename\": \"%@\", \"lastModifiedDate\": %f}", uri, filename, modifiedDate];
+                      resolve(result);
                   } else {
                       NSError *error = [NSError errorWithDomain:@"com.kintips.authenticator" code:10000 userInfo:@{@"Error reason": [NSString stringWithFormat:@"Cannot add photo \"%@\" to album", options[@"photoPath"]]}];
                       reject(kErrorUnableToSave, nil, error);
@@ -250,22 +249,43 @@ RCT_EXPORT_METHOD(saveToCameraRoll:(NSURLRequest *)request
               } else {
                   PHFetchResult* fetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[[placeholder localIdentifier]] options:nil];
                   NSString * uri = [NSString stringWithFormat:@"ph://%@", [placeholder localIdentifier]];
-                  NSString * filename = @"";
-                  NSTimeInterval modifiedDate;
                   // get the filename
                   if ([fetchRes count] > 0) {
                       PHAsset * asset = [fetchRes firstObject];
-                      filename = [asset valueForKey:@"filename"];
-                      modifiedDate = [[asset modificationDate] timeIntervalSince1970];
+                      
+                      double timeStamp = [options[@"creationTime"]  doubleValue];
+                      NSTimeInterval timeInterval=timeStamp/1000;
+                      NSDate *date = [NSDate dateWithTimeIntervalSince1970:timeInterval];
+                      [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+                          PHAssetChangeRequest *request = [PHAssetChangeRequest changeRequestForAsset:asset];
+                          request.creationDate = date;
+                            // request.favorite = !asset.favorite;
+                      } completionHandler:^(BOOL success, NSError *error) {
+                          if (error != nil) {
+                              NSError *error = [NSError errorWithDomain:@"com.kintips.authenticator" code:10000 userInfo:@{@"Error reason": [NSString stringWithFormat:@"Cannot add photo \"%@\" to album", options[@"photoPath"]]}];
+                              reject(kErrorUnableToSave, nil, error);
+                              return;
+                          }
+                          PHFetchResult* reFetchRes = [PHAsset fetchAssetsWithLocalIdentifiers:@[[placeholder localIdentifier]] options:nil];
+                          PHAsset * asset = [reFetchRes firstObject];
+                          NSLog(@"Finished updating asset. %@", (success ? @"Success." : error));
+                          NSString *filename = [asset valueForKey:@"filename"];
+                          NSTimeInterval modifiedDate = [[asset modificationDate] timeIntervalSince1970];
+                          NSString *result = [NSString stringWithFormat:@"{\"uri\": \"%@\", \"filename\": \"%@\", \"lastModifiedDate\": %f}", uri, filename, modifiedDate];
+                          resolve(result);
+                      }];
+
+                      
+                      
                   } else {
                       NSError *error = [NSError errorWithDomain:@"com.kintips.authenticator" code:10000 userInfo:@{@"Error reason": [NSString stringWithFormat:@"Cannot add photo \"%@\" to album", options[@"photoPath"]]}];
                       reject(kErrorUnableToSave, nil, error);
                       return;
                   }
                   
-                  result = [NSString stringWithFormat:@"{\"uri\": \"%@\", \"filename\": \"%@\", \"lastModifiedDate\": %f}", uri, filename, modifiedDate];
+                  
               }
-              resolve(result);
+              
           }
           @catch ( NSException *e ) {
               RCTLogInfo( @"NSException caught" );

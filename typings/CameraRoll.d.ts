@@ -78,6 +78,7 @@ declare namespace CameraRoll {
     album?: Array<string>,
     albumOnly?: boolean,
     photoPath: string,
+    creationTime: double
   };
 
     /**
