@@ -25,6 +25,8 @@ import android.text.TextUtils;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
+
 import java.io.*;
 
 import java.net.URLEncoder;
@@ -783,5 +785,24 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
           cursor.close();
       }
       return vidsCount;
+  }
+
+  /**
+   * Method that will create a thumbnail for images and videos
+   * @param uri
+   * @param params
+   * @param promise
+   */
+  @ReactMethod
+  public void getThumbnail(String uri, ReadableMap params, Promise promise) {
+    int width = params.hasKey("width") ? params.getInt("width") : 0;
+    int height = params.hasKey("height") ? params.getInt("height") : 0;
+    String format = params.hasKey("format") ? params.getString("format") : ThumbnailCreatorTask.JPEG_EXT;
+    int timestamp = params.hasKey("timestamp") ? params.getInt("timestamp") : 0;
+    String assetType = params.hasKey("assetType") ? params.getString("assetType") : null;
+    String outputType = params.hasKey("outputType") ? params.getString("outputType") : "filepath";
+    Log.d("RNCameraRoll", "Creating thumbnail from " + uri + " with the following params: " + params.toString());
+
+    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, outputType, promise).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
   }
 }
