@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.URLUtil;
+import androidx.exifinterface.media.ExifInterface;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedAsyncTask;
@@ -336,6 +337,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
         }
 
         Bitmap scaledDown = Bitmap.createBitmap(resultWidth, resultHeight, Bitmap.Config.ARGB_8888);
+        Bitmap image_rotate = rotateOrientation(image);
 
         float pivotX = 0;
         float pivotY = 0;
@@ -345,7 +347,7 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
 
         Canvas canvas = new Canvas(scaledDown);
         canvas.setMatrix(scaleMatrix);
-        canvas.drawBitmap(image, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
+        canvas.drawBitmap(image_rotate, 0, 0, new Paint(Paint.FILTER_BITMAP_FLAG));
 
         return scaledDown;
     }
@@ -388,5 +390,40 @@ public class ThumbnailCreatorTask extends GuardedAsyncTask<Void, Void> {
                 Log.d("RNCameraRoll", "Created sampled bitmap with width: " + bitmap.getWidth() + " and height: " + bitmap.getHeight());
             }
         }
+    }
+
+    private Bitmap rotateOrientation(Bitmap bitmap){
+        try {
+            String fileUri = uri;
+            if (URLUtil.isFileUrl(uri)) {
+                fileUri = Uri.decode(uri).replace("file://", "");
+            }
+            Bitmap rotatedBitmap;
+            ExifInterface exif = new ExifInterface(fileUri);
+            int rotation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            int rotationInDegrees = exifToDegrees(rotation);
+            Matrix matrix = new Matrix();
+            if (rotation != 0f) {
+                matrix.preRotate(rotationInDegrees);
+            }
+            rotatedBitmap = Bitmap.createBitmap(bitmap,0,0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            return rotatedBitmap;
+         } catch (IOException e) {
+            Log.d("RNCameraRoll", "orientation ERRROR :"+ e);
+            return bitmap;
+        }  
+    }
+
+    private static int exifToDegrees(int exifOrientation) {
+        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) { 
+            return 90; 
+        }
+        else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {  
+            return 180;
+        }
+        else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {  
+            return 270; 
+        }
+        return 0;
     }
 }
