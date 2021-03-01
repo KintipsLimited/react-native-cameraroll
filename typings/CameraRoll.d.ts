@@ -44,6 +44,7 @@ declare namespace CameraRoll {
       },
       timestamp: number,
       creation_date: number,
+      file_size: number,
       location?: {
         latitude?: number,
         longitude?: number,

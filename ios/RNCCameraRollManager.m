@@ -559,7 +559,14 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
       //   }
       // }
       // NSString *const origFilename = origFilenameTemp;
-      NSString * origFilename = [asset valueForKey:@"filename"];
+      // Get underlying resources of an asset - this includes files as well as details about edited PHAssets
+
+      // This is required for the filename and mimeType filtering
+
+      NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
+      PHAssetResource * resource = [assetResources firstObject];
+      NSString * origFilename = resource.originalFilename;
+      NSNumber* fileSize = [resource valueForKey:@"fileSize"];
 
       // A note on isStored: in the previous code that used ALAssets, isStored
       // was always set to YES, probably because iCloud-synced images were never returned (?).
@@ -582,6 +589,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
           },
           @"timestamp": @(asset.modificationDate.timeIntervalSince1970),
           @"creation_date": @(asset.creationDate.timeIntervalSince1970),
+          @"file_size": fileSize, 
           @"location": (loc ? @{
               @"latitude": @(loc.coordinate.latitude),
               @"longitude": @(loc.coordinate.longitude),

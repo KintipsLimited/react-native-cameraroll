@@ -493,13 +493,15 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int latitudeIndex = 0;
     int dataIndex = media.getColumnIndex(MediaStore.MediaColumns.DATA);
 
+    int sizeIndex = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
+
     for (int i = 0; i < limit && !media.isAfterLast(); i++) {
       WritableMap edge = new WritableNativeMap();
       WritableMap node = new WritableNativeMap();
       boolean imageInfoSuccess =
           putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex);
       if (imageInfoSuccess) {
-        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex);
+        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex, sizeIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
 
         edge.putMap("node", node);
@@ -521,11 +523,13 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int groupNameIndex,
       //int dateTakenIndex) {
       int dateModifiedIndex,
-      int dateTakenIndex) {
+      int dateTakenIndex, 
+      int sizeIndex) {
     node.putString("type", media.getString(mimeTypeIndex));
     node.putString("group_name", media.getString(groupNameIndex));
     node.putDouble("creation_date", media.getLong(dateTakenIndex) / 1000d);
     node.putDouble("timestamp", media.getLong(dateModifiedIndex));
+    node.putDouble("size", media.getLong(sizeIndex));
   }
 
   private static boolean putImageInfo(
