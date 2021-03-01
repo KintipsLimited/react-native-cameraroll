@@ -75,6 +75,7 @@ export type PhotoIdentifier = {
     group_name: string,
     image: {
       filename: string,
+      fileSize: number,
       uri: string,
       height: number,
       width: number,

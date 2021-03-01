@@ -96,6 +96,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     Images.Media.DATE_MODIFIED,
     MediaStore.MediaColumns.WIDTH,
     MediaStore.MediaColumns.HEIGHT,
+    MediaStore.MediaColumns.SIZE,
 //    Images.Media.LONGITUDE,
 //    Images.Media.LATITUDE,
     MediaStore.MediaColumns.DATA
@@ -489,6 +490,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int dateModifiedIndex = media.getColumnIndex(Images.Media.DATE_MODIFIED);
     int widthIndex = media.getColumnIndex(MediaStore.MediaColumns.WIDTH);
     int heightIndex = media.getColumnIndex(MediaStore.MediaColumns.HEIGHT);
+    int fileSize = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
 //    int longitudeIndex = media.getColumnIndex(Images.Media.LONGITUDE);
 //    int latitudeIndex = media.getColumnIndex(Images.Media.LATITUDE);
     int longitudeIndex = 0;
@@ -499,7 +501,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       WritableMap edge = new WritableNativeMap();
       WritableMap node = new WritableNativeMap();
       boolean imageInfoSuccess =
-          putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex);
+          putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex, fileSize);
       if (imageInfoSuccess) {
         putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
@@ -538,13 +540,15 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int widthIndex,
       int heightIndex,
       int dataIndex,
-      int mimeTypeIndex) {
+      int mimeTypeIndex,
+      int fileSize) {
     WritableMap image = new WritableNativeMap();
     Uri photoUri = Uri.parse("file://" + media.getString(dataIndex));
     File file = new File(media.getString(dataIndex));
     String strFileName = file.getName();
     image.putString("uri", photoUri.toString());
     image.putString("filename", strFileName);
+    image.putInt("fileSize", fileSize);
     float width = media.getInt(widthIndex);
     float height = media.getInt(heightIndex);
 
