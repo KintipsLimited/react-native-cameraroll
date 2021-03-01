@@ -565,8 +565,16 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
 
       NSString * origFilename = [asset valueForKey:@"filename"];
       NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
-      PHAssetResource * resource = [assetResources firstObject];
-      NSNumber* fileSize = [resource valueForKey:@"fileSize"];
+      NSNumber* fileSize = [NSNumber numberWithInt:0];
+      if (assetResources.count > 1) {
+        for (PHAssetResource * resourceTemp in assetResources)
+        {
+          if (resourceTemp.type != PHAssetResourceTypePhoto) {
+            continue;
+          }
+          fileSize = [resourceTemp valueForKey:@"fileSize"];
+        }
+      }
 
       // A note on isStored: in the previous code that used ALAssets, isStored
       // was always set to YES, probably because iCloud-synced images were never returned (?).
