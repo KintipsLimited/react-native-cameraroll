@@ -563,9 +563,9 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
 
       // This is required for the filename and mimeType filtering
 
+      NSString * origFilename = [asset valueForKey:@"filename"];
       NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
       PHAssetResource * resource = [assetResources firstObject];
-      NSString * origFilename = resource.originalFilename;
       NSNumber* fileSize = [resource valueForKey:@"fileSize"];
 
       // A note on isStored: in the previous code that used ALAssets, isStored
