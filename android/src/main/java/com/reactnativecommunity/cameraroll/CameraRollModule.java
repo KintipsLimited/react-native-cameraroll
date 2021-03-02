@@ -25,6 +25,8 @@ import android.text.TextUtils;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
+
 import java.io.*;
 
 import java.net.URLEncoder;
@@ -94,6 +96,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     Images.Media.DATE_MODIFIED,
     MediaStore.MediaColumns.WIDTH,
     MediaStore.MediaColumns.HEIGHT,
+    MediaStore.MediaColumns.SIZE,
 //    Images.Media.LONGITUDE,
 //    Images.Media.LATITUDE,
     MediaStore.MediaColumns.DATA
@@ -487,6 +490,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int dateModifiedIndex = media.getColumnIndex(Images.Media.DATE_MODIFIED);
     int widthIndex = media.getColumnIndex(MediaStore.MediaColumns.WIDTH);
     int heightIndex = media.getColumnIndex(MediaStore.MediaColumns.HEIGHT);
+    int fileSizeIndex = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
 //    int longitudeIndex = media.getColumnIndex(Images.Media.LONGITUDE);
 //    int latitudeIndex = media.getColumnIndex(Images.Media.LATITUDE);
     int longitudeIndex = 0;
@@ -499,7 +503,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       WritableMap edge = new WritableNativeMap();
       WritableMap node = new WritableNativeMap();
       boolean imageInfoSuccess =
-          putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex);
+          putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex, fileSizeIndex);
       if (imageInfoSuccess) {
         putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex, sizeIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
@@ -540,13 +544,16 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int widthIndex,
       int heightIndex,
       int dataIndex,
-      int mimeTypeIndex) {
+      int mimeTypeIndex,
+      int fileSizeIndex) {
     WritableMap image = new WritableNativeMap();
     Uri photoUri = Uri.parse("file://" + media.getString(dataIndex));
     File file = new File(media.getString(dataIndex));
     String strFileName = file.getName();
+    double fileSize = media.getInt(fileSizeIndex);
     image.putString("uri", photoUri.toString());
     image.putString("filename", strFileName);
+    image.putDouble("fileSize", fileSize);
     float width = media.getInt(widthIndex);
     float height = media.getInt(heightIndex);
 
@@ -787,5 +794,24 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
           cursor.close();
       }
       return vidsCount;
+  }
+
+  /**
+   * Method that will create a thumbnail for images and videos
+   * @param uri
+   * @param params
+   * @param promise
+   */
+  @ReactMethod
+  public void getThumbnail(String uri, ReadableMap params, Promise promise) {
+    int width = params.hasKey("width") ? params.getInt("width") : 0;
+    int height = params.hasKey("height") ? params.getInt("height") : 0;
+    String format = params.hasKey("format") ? params.getString("format") : ThumbnailCreatorTask.JPEG_EXT;
+    int timestamp = params.hasKey("timestamp") ? params.getInt("timestamp") : 0;
+    String assetType = params.hasKey("assetType") ? params.getString("assetType") : null;
+    String outputType = params.hasKey("outputType") ? params.getString("outputType") : "filepath";
+    Log.d("RNCameraRoll", "Creating thumbnail from " + uri + " with the following params: " + params.toString());
+
+    new ThumbnailCreatorTask(reactContext, uri, width, height, format, timestamp, assetType, outputType, promise).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
   }
 }
