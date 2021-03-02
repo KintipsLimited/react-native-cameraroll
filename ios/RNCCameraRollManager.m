@@ -625,11 +625,11 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
               @"height": @([asset pixelHeight]),
               @"width": @([asset pixelWidth]),
               @"isStored": @YES, // this field doesn't seem to exist on android
-              @"playableDuration": @([asset duration]) // fractional seconds
+              @"playableDuration": @([asset duration]), // fractional seconds
+              @"file_size": [NSNumber numberWithLongLong: fileSize]
           },
           @"timestamp": @(asset.modificationDate.timeIntervalSince1970),
           @"creation_date": @(asset.creationDate.timeIntervalSince1970),
-          @"file_size": [NSNumber numberWithLongLong: fileSize], 
           @"location": (loc ? @{
               @"latitude": @(loc.coordinate.latitude),
               @"longitude": @(loc.coordinate.longitude),

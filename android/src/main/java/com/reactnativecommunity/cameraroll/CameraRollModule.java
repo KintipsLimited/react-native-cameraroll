@@ -497,15 +497,13 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int latitudeIndex = 0;
     int dataIndex = media.getColumnIndex(MediaStore.MediaColumns.DATA);
 
-    int sizeIndex = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
-
     for (int i = 0; i < limit && !media.isAfterLast(); i++) {
       WritableMap edge = new WritableNativeMap();
       WritableMap node = new WritableNativeMap();
       boolean imageInfoSuccess =
           putImageInfo(resolver, media, node, idIndex, widthIndex, heightIndex, dataIndex, mimeTypeIndex, fileSizeIndex);
       if (imageInfoSuccess) {
-        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex, sizeIndex);
+        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateModifiedIndex, dateTakenIndex);
         putLocationInfo(media, node, longitudeIndex, latitudeIndex);
 
         edge.putMap("node", node);
@@ -527,13 +525,11 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int groupNameIndex,
       //int dateTakenIndex) {
       int dateModifiedIndex,
-      int dateTakenIndex, 
-      int sizeIndex) {
+      int dateTakenIndex) {
     node.putString("type", media.getString(mimeTypeIndex));
     node.putString("group_name", media.getString(groupNameIndex));
     node.putDouble("creation_date", media.getLong(dateTakenIndex) / 1000d);
     node.putDouble("timestamp", media.getLong(dateModifiedIndex));
-    node.putDouble("size", media.getLong(sizeIndex));
   }
 
   private static boolean putImageInfo(
@@ -550,10 +546,10 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     Uri photoUri = Uri.parse("file://" + media.getString(dataIndex));
     File file = new File(media.getString(dataIndex));
     String strFileName = file.getName();
-    double fileSize = media.getInt(fileSizeIndex);
+    double fileSize = media.getDouble(fileSizeIndex);
     image.putString("uri", photoUri.toString());
     image.putString("filename", strFileName);
-    image.putDouble("fileSize", fileSize);
+    image.putDouble("file_size", fileSize);
     float width = media.getInt(widthIndex);
     float height = media.getInt(heightIndex);
 
