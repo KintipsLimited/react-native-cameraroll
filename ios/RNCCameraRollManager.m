@@ -565,15 +565,31 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
 
       NSString * origFilename = [asset valueForKey:@"filename"];
       NSArray<PHAssetResource *> *const assetResources = [PHAssetResource assetResourcesForAsset:asset];
-      NSNumber* fileSize = [NSNumber numberWithInt:0];
-      if (assetResources.count > 1) {
+      long long orgFileSize = 0;
+      long long fullFileSize = 0;
+      long long fileSize = 0;
+      if (assetResources.count > 0) {
         for (PHAssetResource * resourceTemp in assetResources)
         {
-          if (resourceTemp.type != PHAssetResourceTypePhoto) {
-            continue;
+          if (asset.mediaType == PHAssetMediaTypeImage) {
+              if (resourceTemp.type == PHAssetResourceTypePhoto) {
+                orgFileSize = [[resourceTemp valueForKey:@"fileSize"] longLongValue];
+              } else if (resourceTemp.type == PHAssetResourceTypeFullSizePhoto) {
+                fullFileSize = [[resourceTemp valueForKey:@"fileSize"] longLongValue];
+              }
+          } else if (asset.mediaType == PHAssetMediaTypeVideo) {
+              if (resourceTemp.type == PHAssetResourceTypeVideo) {
+                  orgFileSize = [[resourceTemp valueForKey:@"fileSize"] longLongValue];
+              } else if (resourceTemp.type == PHAssetResourceTypeFullSizeVideo) {
+                 fullFileSize = [[resourceTemp valueForKey:@"fileSize"] longLongValue];
+              }
           }
-          fileSize = [resourceTemp valueForKey:@"fileSize"];
         }
+      }
+      if (fullFileSize != 0) {
+          fileSize = fullFileSize;
+      } else {
+          fileSize = orgFileSize;
       }
 
       // A note on isStored: in the previous code that used ALAssets, isStored
@@ -597,7 +613,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
           },
           @"timestamp": @(asset.modificationDate.timeIntervalSince1970),
           @"creation_date": @(asset.creationDate.timeIntervalSince1970),
-          @"file_size": fileSize, 
+          @"file_size": [NSNumber numberWithLongLong: fileSize], 
           @"location": (loc ? @{
               @"latitude": @(loc.coordinate.latitude),
               @"longitude": @(loc.coordinate.longitude),
