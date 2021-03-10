@@ -101,6 +101,7 @@ static NSString *const kErrorAuthDenied = @"E_PHOTO_LIBRARY_AUTH_DENIED";
 static NSString *const kErrorUnsupportedUrl = @"E_UNSUPPORTED_URL";
 
 static NSString *const kErrorFileDoesntExist = @"E_FILE_DOESNT_EXIST";
+static NSString *const kErrorThumbnail = @"E_FAILED_TO_GENERATE_THUMBNAIL";
 
 static NSString *const kMedia_Photos = @"photos";
 static NSString *const kMedia_Videos = @"videos";
@@ -880,6 +881,10 @@ static UIImage* resizeToRequested(UIImage* image, NSUInteger requestedWidth, NSU
 }
 
 static void generateThumbnail(UIImage *thumbnail, NSString* format, NSString* thumbnailDir, NSString* outputType, RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
+    if (thumbnail == nil) {
+        reject(kErrorThumbnail, @"Cannot generate thumbnail", nil);
+        return;
+    }
     NSLog(@"[createPhotoThumbnail] generating thumbnail file %@", thumbnail);
     NSLog(@"[createPhotoThumbnail] generating thumbnail file with size %f %f", thumbnail.size.width, thumbnail.size.height);
     NSLog(@"[createPhotoThumbnail] generating thumbnail file %@", thumbnail);
