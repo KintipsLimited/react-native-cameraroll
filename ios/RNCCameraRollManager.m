@@ -626,6 +626,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
               @"width": @([asset pixelWidth]),
               @"isStored": @YES, // this field doesn't seem to exist on android
               @"playableDuration": @([asset duration]), // fractional seconds
+              @"isFavorite": @([asset favorite]), //indicates whether the user has marked the asset as a favorite
               @"file_size": [NSNumber numberWithLongLong: fileSize]
           },
           @"timestamp": @(asset.modificationDate.timeIntervalSince1970),

@@ -80,6 +80,7 @@ export type PhotoIdentifier = {
       height: number,
       width: number,
       isStored?: boolean,
+      isFavorite?: boolean,
       playableDuration: number,
     },
     timestamp: number,
