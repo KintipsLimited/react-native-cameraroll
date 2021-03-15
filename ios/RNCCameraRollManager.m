@@ -564,6 +564,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
                                                   ? @"audio"
                                                   : @"unknown")));
       CLLocation *const loc = asset.location;
+      BOOL *const isFavorite = asset.favorite;
       // NSString * origFilenameTemp = resource.originalFilename;
       // if (assetResources.count > 1) {
       //   for (PHAssetResource * resourceTemp in assetResources)
@@ -626,7 +627,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
               @"width": @([asset pixelWidth]),
               @"isStored": @YES, // this field doesn't seem to exist on android
               @"playableDuration": @([asset duration]), // fractional seconds
-              @"isFavorite": @([asset favorite]), //indicates whether the user has marked the asset as a favorite
+              @"isFavorite": @(isFavorite), //indicates whether the user has marked the asset as a favorite
               @"file_size": [NSNumber numberWithLongLong: fileSize]
           },
           @"timestamp": @(asset.modificationDate.timeIntervalSince1970),
