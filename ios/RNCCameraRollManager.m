@@ -737,7 +737,7 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
   }
     
   PHAsset* asset = [fetchResult firstObject];
-  if (asset) {
+  if (asset && asset.pixelWidth > 0 && asset.pixelHeight > 0) {
       NSLog(@"[createPhotoThumbnail] photo thumbnail asset url %@", url);
       NSLog(@"[createPhotoThumbnail] photo thumbnail asset %@", asset);
       NSLog(@"[createPhotoThumbnail] photo thumbnail %lu %lu", asset.pixelWidth, asset.pixelHeight);
@@ -746,7 +746,7 @@ static void createPhotoThumbnail(NSString* uri, NSUInteger requestWidth, NSUInte
   }
   else {
     // resolve(nil);
-    reject(kErrorFileDoesntExist, @"File doesn't exist", nil);
+    reject(kErrorFileDoesntExist, @"File doesn't exist or is invalid.", nil);
   }
 }
 
@@ -811,7 +811,7 @@ static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger hei
   }
     
   PHAsset* asset = [fetchResult firstObject];
-  if (asset) {
+  if (asset && asset.pixelWidth > 0 && asset.pixelHeight > 0) {
     PHVideoRequestOptions *videoOptions = [PHVideoRequestOptions new];
     videoOptions.networkAccessAllowed = YES;
     videoOptions.deliveryMode = PHVideoRequestOptionsDeliveryModeHighQualityFormat;
@@ -828,7 +828,7 @@ static void createVideoThumbnail(NSString* uri, NSUInteger width, NSUInteger hei
     }];
   }
   else {
-      reject(kErrorFileDoesntExist, @"File doesn't exist", nil);
+      reject(kErrorFileDoesntExist, @"File doesn't exist or is invalid.", nil);
       // resolve(nil);
   }
 }
