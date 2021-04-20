@@ -704,16 +704,20 @@ RCT_EXPORT_METHOD(getThumbnail:(NSString *)url params:(NSDictionary *)params res
   tempThumbDirectory = [tempThumbDirectory stringByAppendingString:@"/thumbnails/"];
     
   [[NSFileManager defaultManager] createDirectoryAtPath:tempThumbDirectory withIntermediateDirectories:YES attributes:nil error:nil];
-    
-  NSString *const lowercaseAssetType = [assetType lowercaseString];
-  if ([lowercaseAssetType isEqualToString:kMedia_Photos]) {
-    createPhotoThumbnail(url, width, height, format, tempThumbDirectory, outputType, resolve, reject);
-  }
-  else if ([lowercaseAssetType isEqualToString:kMedia_Videos]) {
-    createVideoThumbnail(url, width, height, format, tempThumbDirectory, outputType, timestamp, resolve, reject);
-  }
-  else {
-    resolve(nil);
+  
+  @try {
+    NSString *const lowercaseAssetType = [assetType lowercaseString];
+    if ([lowercaseAssetType isEqualToString:kMedia_Photos]) {
+      createPhotoThumbnail(url, width, height, format, tempThumbDirectory, outputType, resolve, reject);
+    }
+    else if ([lowercaseAssetType isEqualToString:kMedia_Videos]) {
+      createVideoThumbnail(url, width, height, format, tempThumbDirectory, outputType, timestamp, resolve, reject);
+    }
+    else {
+      resolve(nil);
+    }
+  } @catch (NSException *exception) {
+      reject(exception.name, exception.reason, nil);
   }
 }
 
