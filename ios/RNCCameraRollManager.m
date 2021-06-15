@@ -390,9 +390,17 @@ RCT_EXPORT_METHOD(getAlbums:(NSDictionary *)params
     // Enumerate assets within the collection
     PHFetchResult<PHAsset *> *const assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:obj options:assetFetchOptions];
     if (assetsFetchResult.count > 0) {
+      NSString * albumTitle = [obj localizedTitle];
+      NSString * albumId = [obj localIdentifier];
+      if (albumTitle == nil) {
+          albumTitle = @"N/A";
+      }
+      if (albumId == nil) {
+          return;
+      }
       [result addObject:@{
-        @"title": [obj localizedTitle],
-        @"id": [obj localIdentifier],
+        @"title": albumTitle,
+        @"id": albumId,
         @"count": @(assetsFetchResult.count)
       }];
     }
